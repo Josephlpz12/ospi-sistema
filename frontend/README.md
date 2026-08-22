@@ -1,32 +1,45 @@
-# React + TypeScript + Vite
+# Frontend — OSPI
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Interfaz web del **Sistema de gestión de proyectos y clientes asociados** para la empresa OSPI (venta de software, departamento de Guatemala).
 
-Currently, two official plugins are available:
+Este directorio es la aplicación en **React + TypeScript + Vite**. Se comunica con la API en `http://localhost:4000`.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Qué incluye (avance del núcleo)
 
-## React Compiler
+- Inicio de sesión (JWT; el token se guarda en `localStorage`)
+- Panel con totales de clientes y proyectos
+- CRUD de clientes **individuales** y **empresas**
+- CRUD de proyectos ligados a un cliente
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Requisitos
 
-## Expanding the Oxlint configuration
+- Node.js 20
+- El backend en ejecución (`backend` → `npm run dev`)
+- PostgreSQL con la base `ospi_sistema`
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Cómo ejecutar
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Abre [http://localhost:5173](http://localhost:5173). El usuario administrador se crea con el script del backend (`npm run crear-admin` en la carpeta `backend`).
+
+## Estructura
+
+```
+src/
+  pantallas/     Login, panel, clientes y proyectos
+  componentes/   Menú y rutas privadas
+  contexto/      Sesión del usuario
+  servicios/     Llamadas a la API
+```
+
+## Scripts
+
+| Comando        | Descripción              |
+|----------------|--------------------------|
+| `npm run dev`  | Entorno de desarrollo    |
+| `npm run build`| Compilación para producción |
