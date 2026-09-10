@@ -8,6 +8,7 @@ import { ClientesLista } from "./pantallas/ClientesLista";
 import { ClienteFormulario } from "./pantallas/ClienteFormulario";
 import { ProyectosLista } from "./pantallas/ProyectosLista";
 import { ProyectoFormulario } from "./pantallas/ProyectoFormulario";
+import { ProyectoSeguimiento } from "./pantallas/ProyectoSeguimiento";
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
               <Route path="/proyectos" element={<ProyectosLista />} />
               <Route path="/proyectos/nuevo" element={<ProyectoFormulario />} />
               <Route path="/proyectos/:id/editar" element={<ProyectoFormulario />} />
+              <Route path="/proyectos/:id/seguimiento" element={<ProyectoSeguimiento />} />
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

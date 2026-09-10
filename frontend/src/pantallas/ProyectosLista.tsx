@@ -58,6 +58,7 @@ export function ProyectosLista() {
               <td>{p.estado}</td>
               <td>{Number(p.porcentaje_avance)}%</td>
               <td className="acciones">
+                <Link to={`/proyectos/${p.id_proyecto}/seguimiento`}>Seguimiento</Link>
                 <Link to={`/proyectos/${p.id_proyecto}/editar`}>Editar</Link>
                 {p.estado !== "Cancelado" ? (
                   <button type="button" className="btn-text" onClick={() => void cancelar(p.id_proyecto)}>

@@ -234,11 +234,38 @@ small {
   color: var(--muted);
 }
 
+.muted-line {
+  color: var(--muted);
+  margin-top: -8px;
+}
+
+.seguimiento-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.form-inline input,
+.form-inline select {
+  flex: 1;
+  min-width: 140px;
+}
+
 @media (max-width: 800px) {
   .app-shell {
     grid-template-columns: 1fr;
   }
   .stats {
+    grid-template-columns: 1fr;
+  }
+  .seguimiento-grid {
     grid-template-columns: 1fr;
   }
 }

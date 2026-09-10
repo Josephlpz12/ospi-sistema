@@ -4,6 +4,8 @@ import { pool } from "./db.js";
 import { authRutas } from "./rutas/auth.rutas.js";
 import { clientesRutas } from "./rutas/clientes.rutas.js";
 import { proyectosRutas } from "./rutas/proyectos.rutas.js";
+import { seguimientoRutas } from "./rutas/seguimiento.rutas.js";
+import { empleadosRutas } from "./rutas/empleados.rutas.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 4000;
@@ -30,6 +32,8 @@ app.get("/api/health", async (_req, res) => {
 
 app.use("/api/auth", authRutas);
 app.use("/api/clientes", clientesRutas);
+app.use("/api/empleados", empleadosRutas);
+app.use("/api/proyectos", seguimientoRutas);
 app.use("/api/proyectos", proyectosRutas);
 
 app.listen(port, () => {

@@ -44,3 +44,45 @@ export type Proyecto = {
   nombre_cliente: string | null;
   tipo_cliente: string;
 };
+
+export type Fase = {
+  id_fase: number;
+  id_proyecto: number;
+  nombre: string;
+  orden: number;
+  fecha_inicio: string | null;
+  fecha_fin: string | null;
+  estado: string;
+};
+
+export type Tarea = {
+  id_tarea: number;
+  id_proyecto: number;
+  id_fase: number | null;
+  id_asignado: number | null;
+  titulo: string;
+  descripcion: string | null;
+  estado: string;
+  fecha_limite: string | null;
+  porcentaje: string | number;
+  nombre_fase: string | null;
+  nombre_asignado: string | null;
+};
+
+export type Avance = {
+  id_avance: number;
+  id_proyecto: number;
+  id_usuario: number | null;
+  porcentaje: string | number;
+  comentario: string | null;
+  registrado_en: string;
+  nombre_usuario: string | null;
+};
+
+export type Empleado = {
+  id_empleado: number;
+  nombres: string;
+  apellidos: string;
+  cargo: string | null;
+  activo: boolean;
+};
