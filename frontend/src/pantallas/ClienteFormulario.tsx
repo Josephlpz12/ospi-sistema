@@ -1,6 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { guardarCliente, obtenerCliente } from "../servicios/clientes.servicio";
+import { guardarCliente, obtenerFichaCliente } from "../servicios/clientes.servicio";
 
 type Tipo = "INDIVIDUAL" | "EMPRESA";
 
@@ -28,8 +28,8 @@ export function ClienteFormulario() {
 
   useEffect(() => {
     if (!id) return;
-    obtenerCliente(Number(id))
-      .then((c) => {
+    obtenerFichaCliente(Number(id))
+      .then(({ cliente: c }) => {
         setTipo(c.tipo_cliente);
         setForm({
           nombres: c.nombres ?? "",

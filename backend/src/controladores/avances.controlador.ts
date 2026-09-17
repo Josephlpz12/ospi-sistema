@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { pool } from "../db.js";
 import { proyectoExiste } from "./fases.controlador.js";
+import { asegurarAlerta } from "./alertas.controlador.js";
 
 export async function listarAvances(req: Request, res: Response) {
   const idProyecto = Number(req.params.id);
@@ -45,6 +46,14 @@ export async function registrarAvance(req: Request, res: Response) {
       [idProyecto, req.usuario?.id_usuario ?? null, porcentaje, comentario || null],
     );
     await pool.query("UPDATE proyectos SET porcentaje_avance = $2 WHERE id_proyecto = $1", [idProyecto, porcentaje]);
+    if (porcentaje < 40) {
+      const proy = await pool.query("SELECT nombre FROM proyectos WHERE id_proyecto = $1", [idProyecto]);
+      await asegurarAlerta(
+        idProyecto,
+        "AVANCE_BAJO",
+        `Avance bajo (${porcentaje}%) en ${proy.rows[0]?.nombre ?? "proyecto"}`,
+      );
+    }
     res.status(201).json({ ok: true, avance: insertado.rows[0] });
   } catch (error) {
     console.error(error);

@@ -1,4 +1,4 @@
-import type { Cliente } from "../tipos";
+import type { Cliente, Proyecto } from "../tipos";
 import { api } from "./api";
 
 export async function listarClientes() {
@@ -6,9 +6,9 @@ export async function listarClientes() {
   return datos.clientes;
 }
 
-export async function obtenerCliente(id: number) {
-  const datos = await api<{ cliente: Cliente }>(`/clientes/${id}`);
-  return datos.cliente;
+export async function obtenerFichaCliente(id: number) {
+  const datos = await api<{ cliente: Cliente; proyectos: Proyecto[] }>(`/clientes/${id}`);
+  return datos;
 }
 
 export async function guardarCliente(cuerpo: Record<string, unknown>, id?: number) {

@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { pool } from "../db.js";
 import { proyectoExiste } from "./fases.controlador.js";
+import { asegurarAlerta } from "./alertas.controlador.js";
 
 const SQL_TAREA = `
   SELECT t.id_tarea, t.id_proyecto, t.id_fase, t.id_asignado, t.titulo, t.descripcion,
@@ -55,7 +56,11 @@ export async function crearTarea(req: Request, res: Response) {
       ],
     );
     const creado = await pool.query(`${SQL_TAREA} WHERE t.id_tarea = $1`, [insertado.rows[0].id_tarea]);
-    res.status(201).json({ ok: true, tarea: creado.rows[0] });
+    const tarea = creado.rows[0];
+    if (tarea.fecha_limite && new Date(tarea.fecha_limite) < new Date() && tarea.estado !== "COMPLETADA") {
+      await asegurarAlerta(idProyecto, "TAREA_VENCIDA", `Tarea vencida: ${tarea.titulo}`);
+    }
+    res.status(201).json({ ok: true, tarea });
   } catch (error) {
     console.error(error);
     res.status(500).json({ ok: false, mensaje: "Error al crear la tarea" });
@@ -94,7 +99,11 @@ export async function actualizarTarea(req: Request, res: Response) {
       return;
     }
     const actualizado = await pool.query(`${SQL_TAREA} WHERE t.id_tarea = $1`, [idTarea]);
-    res.json({ ok: true, tarea: actualizado.rows[0] });
+    const tarea = actualizado.rows[0];
+    if (tarea.fecha_limite && new Date(tarea.fecha_limite) < new Date() && tarea.estado !== "COMPLETADA") {
+      await asegurarAlerta(idProyecto, "TAREA_VENCIDA", `Tarea vencida: ${tarea.titulo}`);
+    }
+    res.json({ ok: true, tarea });
   } catch (error) {
     console.error(error);
     res.status(500).json({ ok: false, mensaje: "Error al actualizar la tarea" });

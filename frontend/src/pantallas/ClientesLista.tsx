@@ -59,6 +59,7 @@ export function ClientesLista() {
               <td>{c.tipo_cliente === "EMPRESA" ? "Empresa" : "Individual"}</td>
               <td>{c.estado}</td>
               <td className="acciones">
+                <Link to={`/clientes/${c.id_cliente}`}>Ver</Link>
                 <Link to={`/clientes/${c.id_cliente}/editar`}>Editar</Link>
                 {c.estado !== "INACTIVO" ? (
                   <button type="button" className="btn-text" onClick={() => void inactivar(c.id_cliente)}>

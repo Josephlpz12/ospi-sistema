@@ -2,18 +2,21 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { listarClientes } from "../servicios/clientes.servicio";
 import { listarProyectos } from "../servicios/proyectos.servicio";
-import type { Proyecto } from "../tipos";
+import { generarAlertas, listarAlertas } from "../servicios/alertas.servicio";
+import type { Alerta, Proyecto } from "../tipos";
 
 export function Panel() {
   const [clientes, setClientes] = useState(0);
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
+  const [alertas, setAlertas] = useState<Alerta[]>([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    Promise.all([listarClientes(), listarProyectos()])
-      .then(([listaClientes, listaProyectos]) => {
+    Promise.all([listarClientes(), listarProyectos(), generarAlertas().catch(() => listarAlertas(true))])
+      .then(([listaClientes, listaProyectos, listaAlertas]) => {
         setClientes(listaClientes.length);
         setProyectos(listaProyectos);
+        setAlertas(listaAlertas.filter((a) => !a.leida).slice(0, 5));
       })
       .catch((err: Error) => setError(err.message));
   }, []);
@@ -79,6 +82,36 @@ export function Panel() {
           </tbody>
         </table>
       )}
+      {alertas.length > 0 ? (
+        <>
+          <h2>Alertas recientes</h2>
+          <p>
+            <Link to="/alertas">Ver todas</Link>
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Mensaje</th>
+                <th>Proyecto</th>
+              </tr>
+            </thead>
+            <tbody>
+              {alertas.map((a) => (
+                <tr key={a.id_alerta}>
+                  <td>{a.mensaje}</td>
+                  <td>
+                    {a.id_proyecto ? (
+                      <Link to={`/proyectos/${a.id_proyecto}/seguimiento`}>{a.nombre_proyecto}</Link>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      ) : null}
       {atencion.length > 0 ? (
         <>
           <h2>Requieren atención</h2>

@@ -59,3 +59,20 @@ export async function api<T>(ruta: string, opciones: Opciones = {}): Promise<T> 
 }
 
 export { API };
+
+export const ARCHIVOS = "http://localhost:4000/uploads";
+
+export async function apiFormData<T>(ruta: string, body: FormData): Promise<T> {
+  const token = leerToken();
+  const headers = new Headers();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const respuesta = await fetch(`${API}${ruta}`, { method: "POST", headers, body });
+  const datos = await respuesta.json().catch(() => ({}));
+  if (respuesta.status === 401) {
+    borrarSesion();
+    if (window.location.pathname !== "/login") window.location.assign("/login");
+    throw new Error(datos.mensaje ?? "No autenticado");
+  }
+  if (!respuesta.ok) throw new Error(datos.mensaje ?? "Error en el servidor");
+  return datos as T;
+}

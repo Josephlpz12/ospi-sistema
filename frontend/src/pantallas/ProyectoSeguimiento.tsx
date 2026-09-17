@@ -14,6 +14,7 @@ import {
   listarTareas,
   registrarAvance,
 } from "../servicios/seguimiento.servicio";
+import { ListaDocumentos } from "../componentes/ListaDocumentos";
 import type { Avance, Empleado, Fase, Proyecto, Tarea } from "../tipos";
 
 export function ProyectoSeguimiento() {
@@ -110,7 +111,11 @@ export function ProyectoSeguimiento() {
       </p>
       <h1>Seguimiento</h1>
       <p className="muted-line">
-        {proyecto.codigo} · {proyecto.nombre} · {proyecto.nombre_cliente} · {Number(proyecto.porcentaje_avance)}%
+        {proyecto.codigo} · {proyecto.nombre} ·{" "}
+        <Link to={`/clientes/${proyecto.id_cliente}`}>{proyecto.nombre_cliente}</Link> · {Number(proyecto.porcentaje_avance)}%
+        {proyecto.resumen
+          ? ` · ${proyecto.resumen.fases} fases · ${proyecto.resumen.tareas_abiertas} tareas abiertas`
+          : ""}
       </p>
       {error ? <p className="alerta">{error}</p> : null}
 
@@ -282,6 +287,10 @@ export function ProyectoSeguimiento() {
           </tbody>
         </table>
       </article>
+
+      <div style={{ marginTop: 20 }}>
+        <ListaDocumentos id_proyecto={idProyecto} />
+      </div>
     </section>
   );
 }

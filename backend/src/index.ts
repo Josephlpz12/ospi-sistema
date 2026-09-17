@@ -6,12 +6,16 @@ import { clientesRutas } from "./rutas/clientes.rutas.js";
 import { proyectosRutas } from "./rutas/proyectos.rutas.js";
 import { seguimientoRutas } from "./rutas/seguimiento.rutas.js";
 import { empleadosRutas } from "./rutas/empleados.rutas.js";
+import { alertasRutas } from "./rutas/alertas.rutas.js";
+import { documentosRutas } from "./rutas/documentos.rutas.js";
+import { carpetaUploads } from "./controladores/documentos.controlador.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 4000;
 
 app.use(cors({ origin: "http://localhost:5173" }));
 app.use(express.json());
+app.use("/uploads", express.static(carpetaUploads));
 
 app.get("/api/health", async (_req, res) => {
   try {
@@ -33,6 +37,8 @@ app.get("/api/health", async (_req, res) => {
 app.use("/api/auth", authRutas);
 app.use("/api/clientes", clientesRutas);
 app.use("/api/empleados", empleadosRutas);
+app.use("/api/alertas", alertasRutas);
+app.use("/api/documentos", documentosRutas);
 app.use("/api/proyectos", seguimientoRutas);
 app.use("/api/proyectos", proyectosRutas);
 

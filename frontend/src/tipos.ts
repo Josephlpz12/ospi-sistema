@@ -43,6 +43,11 @@ export type Proyecto = {
   estado: string;
   nombre_cliente: string | null;
   tipo_cliente: string;
+  resumen?: {
+    fases: number;
+    tareas_abiertas: number;
+    porcentaje: number;
+  };
 };
 
 export type Fase = {
@@ -85,4 +90,26 @@ export type Empleado = {
   apellidos: string;
   cargo: string | null;
   activo: boolean;
+};
+
+export type Alerta = {
+  id_alerta: number;
+  id_proyecto: number | null;
+  tipo: string;
+  mensaje: string;
+  leida: boolean;
+  programada_en: string | null;
+  creada_en: string;
+  nombre_proyecto: string | null;
+  codigo: string | null;
+};
+
+export type Documento = {
+  id_documento: number;
+  id_cliente: number | null;
+  id_proyecto: number | null;
+  nombre: string;
+  tipo: string | null;
+  ruta_archivo: string | null;
+  subido_en: string;
 };

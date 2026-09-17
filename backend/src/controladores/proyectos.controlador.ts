@@ -39,7 +39,25 @@ export async function obtenerProyecto(req: Request, res: Response) {
       res.status(404).json({ ok: false, mensaje: "Proyecto no encontrado" });
       return;
     }
-    res.json({ ok: true, proyecto: resultado.rows[0] });
+    const id = resultado.rows[0].id_proyecto as number;
+    const [fases, abiertas] = await Promise.all([
+      pool.query("SELECT COUNT(*)::int AS total FROM fases_proyecto WHERE id_proyecto = $1", [id]),
+      pool.query(
+        "SELECT COUNT(*)::int AS total FROM tareas WHERE id_proyecto = $1 AND estado <> 'COMPLETADA'",
+        [id],
+      ),
+    ]);
+    res.json({
+      ok: true,
+      proyecto: {
+        ...resultado.rows[0],
+        resumen: {
+          fases: fases.rows[0].total,
+          tareas_abiertas: abiertas.rows[0].total,
+          porcentaje: Number(resultado.rows[0].porcentaje_avance),
+        },
+      },
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ ok: false, mensaje: "Error al obtener el proyecto" });

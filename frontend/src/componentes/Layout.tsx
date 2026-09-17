@@ -21,6 +21,7 @@ export function Layout() {
           </NavLink>
           <NavLink to="/clientes">Clientes</NavLink>
           <NavLink to="/proyectos">Proyectos</NavLink>
+          <NavLink to="/alertas">Alertas</NavLink>
         </nav>
       </aside>
       <div className="main">

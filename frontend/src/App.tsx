@@ -9,6 +9,8 @@ import { ClienteFormulario } from "./pantallas/ClienteFormulario";
 import { ProyectosLista } from "./pantallas/ProyectosLista";
 import { ProyectoFormulario } from "./pantallas/ProyectoFormulario";
 import { ProyectoSeguimiento } from "./pantallas/ProyectoSeguimiento";
+import { ClienteFicha } from "./pantallas/ClienteFicha";
+import { AlertasLista } from "./pantallas/AlertasLista";
 
 export default function App() {
   return (
@@ -19,9 +21,11 @@ export default function App() {
           <Route element={<RutaPrivada />}>
             <Route element={<Layout />}>
               <Route path="/" element={<Panel />} />
+              <Route path="/alertas" element={<AlertasLista />} />
               <Route path="/clientes" element={<ClientesLista />} />
               <Route path="/clientes/nuevo" element={<ClienteFormulario />} />
               <Route path="/clientes/:id/editar" element={<ClienteFormulario />} />
+              <Route path="/clientes/:id" element={<ClienteFicha />} />
               <Route path="/proyectos" element={<ProyectosLista />} />
               <Route path="/proyectos/nuevo" element={<ProyectoFormulario />} />
               <Route path="/proyectos/:id/editar" element={<ProyectoFormulario />} />

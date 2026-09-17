@@ -28,7 +28,15 @@ export async function obtenerCliente(req: Request, res: Response) {
       res.status(404).json({ ok: false, mensaje: "Cliente no encontrado" });
       return;
     }
-    res.json({ ok: true, cliente: resultado.rows[0] });
+    const proyectos = await pool.query(
+      `SELECT p.id_proyecto, p.codigo, p.nombre, p.porcentaje_avance, e.nombre AS estado
+       FROM proyectos p
+       JOIN estados_proyecto e ON e.id_estado = p.id_estado
+       WHERE p.id_cliente = $1
+       ORDER BY p.id_proyecto DESC`,
+      [req.params.id],
+    );
+    res.json({ ok: true, cliente: resultado.rows[0], proyectos: proyectos.rows });
   } catch (error) {
     console.error(error);
     res.status(500).json({ ok: false, mensaje: "Error al obtener el cliente" });
