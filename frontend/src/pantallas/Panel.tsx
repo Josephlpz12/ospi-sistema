@@ -35,7 +35,12 @@ export function Panel() {
 
   return (
     <section>
-      <h1>Panel</h1>
+      <div className="page-head">
+        <h1>Panel</h1>
+        <Link className="btn" to="/monitoreo">
+          Tablero de monitoreo
+        </Link>
+      </div>
       {error ? <p className="alerta">{error}</p> : null}
       <div className="stats">
         <article className="card stat">

@@ -1,0 +1,140 @@
+No voy a escribir código. Tablas `suscripciones`, `contratos`, `facturas`, `pagos` y `multas` ya están; `suscripciones` exige un **producto** (`productos_software`). El tablero es un listado de **todos** los proyectos en estado **Activo**, distinto de “Requieren atención”. `diagramas/` y `prototipos/` no se tocan.
+
+---
+
+## Regla de negocio (cómo se va a programar)
+
+Cadena: **cliente → suscripción (servicio) → contrato → factura → pago o mora**.
+
+**Factura vencida (automático, sin FEL)**  
+Al listar facturas o al pulsar “Revisar vencidas”: si `fecha_vencimiento < hoy` y el estado es `PENDIENTE`, pasa a `VENCIDA`. No se cobra sola; solo cambia el estado. Se puede crear una alerta `FACTURA_VENCIDA` (usa `alertas.id_factura` si hace falta).
+
+**Pago**  
+Se registra contra una factura. Si la suma de `pagos.monto` cubre `facturas.monto`, la factura pasa a `PAGADA`. Eso **no** reactiva el servicio solo: reactivar es un paso explícito (evita reactivar por un abono parcial).
+
+**Mora + multa + suspensión (acción explícita, la que pide OSPI)**  
+En una factura `PENDIENTE` o `VENCIDA`, el usuario confirma **Aplicar mora**:
+
+1. Factura → `VENCIDA` (si aún no lo estaba).  
+2. Se inserta **multa** (`PENDIENTE`): motivo + monto (el usuario lo captura; por defecto se puede sugerir un % del monto de la factura, p. ej. 10%, editable). Ligada a `id_contrato` e `id_factura`.  
+3. **Suscripción** del contrato (o la activa del cliente) → `SUSPENDIDA`.  
+4. **Contrato** → `INCUMPLIDO` (o `SUSPENDIDO`).  
+5. **Cliente** → `estado = SUSPENDIDO` (ya existe en el CHECK).  
+6. Alerta `SERVICIO_SUSPENDIDO`.
+
+Los **proyectos no se cancelan solos** (el trabajo interno puede seguir; el servicio vendido queda cortado). En ficha de cliente se verá “Servicio suspendido”.
+
+**Reactivar** (después de pagar factura y/o multa): acción **Reactivar servicio**: suscripción `ACTIVA`, cliente `ACTIVO`, contrato `VIGENTE` si ya no hay facturas vencidas sin pagar. Multa se puede marcar `PAGADA` al registrar un pago extra o un botón “Condonar” (solo admin, si da tiempo; si no, solo `PAGADA` al capturar el cobro).
+
+No entra: facturación electrónica, recálculo SAT, ni recargos diarios automáticos.
+
+---
+
+## Backend — archivos nuevos
+
+```
+backend/src/
+  controladores/
+    productos.controlador.ts     GET catálogo (y alta mínima si el seed no basta)
+    suscripciones.controlador.ts Alta/listado/cambio de estado
+    contratos.controlador.ts     CRUD ligero + aplicar mora / reactivar
+    facturas.controlador.ts      Alta, listar, marcar vencidas, registrar pago
+    monitoreo.controlador.ts     GET proyectos activos (tablero)
+
+  rutas/
+    productos.rutas.ts
+    finanzas.rutas.ts            Contratos, facturas, pagos, multas, suscripciones
+    monitoreo.rutas.ts           /api/monitoreo/...
+```
+
+Pagos y multas pueden vivir en `facturas.controlador.ts` y `contratos.controlador.ts` para no atomizar de más.
+
+**SQL:** no recrear tablas. Sí un seed `004_seed_finanzas.sql`: 1–2 filas en `productos_software` (si no hay) para poder crear suscripciones.
+
+**Solo se modifica:** `index.ts` (montar rutas). Alertas: reutilizar `asegurarAlerta` (y `id_factura` cuando aplique). Ficha de cliente: al `GET /api/clientes/:id` agregar `suscripciones` (y opcionalmente facturas abiertas). No rehacer seguimiento ni documentos.
+
+---
+
+## Backend — endpoints (JWT)
+
+**Catálogo / servicio**
+
+| Método | Ruta | Acción |
+|--------|------|--------|
+| GET | `/api/productos` | Listar software |
+| GET/POST | `/api/clientes/:id/suscripciones` | Listar / crear (producto, fechas, `ACTIVA`) |
+| PUT | `/api/suscripciones/:id` | Cambiar estado a mano (`ACTIVA` / `SUSPENDIDA` / `CANCELADA`) |
+
+**Contrato y cobro**
+
+| Método | Ruta | Acción |
+|--------|------|--------|
+| GET | `/api/contratos?id_cliente=` | Listar |
+| POST | `/api/contratos` | Cliente + opcional proyecto/suscripción, número, montos, cláusula mora |
+| GET | `/api/contratos/:id` | Contrato + facturas + multas |
+| GET/POST | `/api/contratos/:id/facturas` | Listar / emitir (`PENDIENTE`, vencimiento) |
+| POST | `/api/facturas/revisar-vencidas` | `PENDIENTE` → `VENCIDA` por fecha |
+| POST | `/api/facturas/:id/pagos` | Registrar pago; si cubre el monto → `PAGADA` |
+| POST | `/api/facturas/:id/mora` | **Mora + multa + suspender** (transacción) |
+| POST | `/api/contratos/:id/reactivar` | Revierte suspensión si la deuda está saldada (o con confirmación) |
+| PUT | `/api/multas/:id` | `PAGADA` / `CONDONADA` |
+
+**Tablero**
+
+| Método | Ruta | Acción |
+|--------|------|--------|
+| GET | `/api/monitoreo/proyectos-activos` | Todos con `estados_proyecto.nombre = 'Activo'` |
+
+Cada fila: `id_proyecto`, código, nombre, cliente, **responsable** (`empleados` vía `proyectos.id_responsable`; si es null → “Sin asignar”), **plazo** (`fecha_fin_plan`), **%**, enlace útil (`id` para el front). No filtrar por % ni por fecha: eso sigue en el panel como “Requieren atención”.
+
+---
+
+## Frontend — archivos nuevos
+
+```
+frontend/src/
+  servicios/
+    finanzas.servicio.ts
+    monitoreo.servicio.ts
+
+  pantallas/
+    Monitoreo.tsx                 Tablero de proyectos activos
+    ContratosLista.tsx
+    ContratoFicha.tsx             Facturas, pagos, mora, reactivar
+    SuscripcionesCliente.tsx      O sección dentro de ClienteFicha (mejor incrustada)
+```
+
+Si se incrusta suscripción/facturas abiertas en `ClienteFicha.tsx`, puede no hacer falta `SuscripcionesCliente.tsx` aparte.
+
+## Frontend — archivos a modificar
+
+| Archivo | Cambio |
+|---------|--------|
+| `App.tsx` | `/monitoreo`, `/contratos`, `/contratos/:id` |
+| `Layout.tsx` | Menú **Monitoreo** y **Contratos** (o “Cobros”) |
+| `ClienteFicha.tsx` | Estado de servicio, suscripciones, enlace a contratos, aviso si `SUSPENDIDO` |
+| `Panel.tsx` | Enlace al tablero; **no** sustituir “Requieren atención” |
+| `tipos.ts` | `Contrato`, `Factura`, `Pago`, `Multa`, `Suscripcion`, `Producto`, fila de monitoreo |
+
+Login, seguimiento, alertas y documentos se quedan. El combo de responsable del proyecto ya existe en el formulario; el tablero **lee** `id_responsable` (convendrá asignarlo al editar proyecto para que el tablero no salga vacío).
+
+---
+
+## Navegación y demo
+
+```
+/monitoreo                 Todos los proyectos Activo (responsable, plazo, %)
+/contratos                 Listado
+/contratos/:id             Emitir factura → registrar pago  O  aplicar mora
+/clientes/:id              Ver si el servicio está suspendido
+```
+
+Guion OSPI: contrato vigente → factura con vencimiento ayer → **Revisar vencidas** o **Aplicar mora** → multa + suscripción suspendida + cliente suspendido → (opcional) pago y **Reactivar**.
+
+---
+
+## Qué no entra en este salto
+
+Correo, FEL, recargo diario, cancelar proyectos al suspender, matriz de permisos. “Requieren atención” se mantiene como recorte del panel; el **100% de activos** es solo `/monitoreo`.
+
+Cuando este mapa te cuadre, el siguiente paso es programar backend y luego pantallas.

@@ -113,3 +113,82 @@ export type Documento = {
   ruta_archivo: string | null;
   subido_en: string;
 };
+
+export type Producto = {
+  id_producto: number;
+  nombre: string;
+  descripcion: string | null;
+  activo: boolean;
+  categoria: string | null;
+};
+
+export type Suscripcion = {
+  id_suscripcion: number;
+  id_cliente: number;
+  id_producto: number;
+  estado: string;
+  fecha_inicio: string | null;
+  fecha_fin: string | null;
+  nombre_producto?: string | null;
+};
+
+export type Contrato = {
+  id_contrato: number;
+  id_cliente: number;
+  id_proyecto: number | null;
+  id_suscripcion: number | null;
+  numero: string;
+  fecha_inicio: string | null;
+  fecha_fin: string | null;
+  monto_total: string | number;
+  moneda: string;
+  clausula_mora: string | null;
+  estado: string;
+  tipo_cliente?: string;
+  nombre_cliente?: string | null;
+  nombre_proyecto?: string | null;
+  estado_suscripcion?: string | null;
+};
+
+export type Factura = {
+  id_factura: number;
+  id_contrato: number;
+  numero: string;
+  fecha_emision: string | null;
+  fecha_vencimiento: string | null;
+  monto: string | number;
+  estado: string;
+  pagado?: string | number;
+};
+
+export type Pago = {
+  id_pago: number;
+  id_factura: number;
+  fecha_pago: string | null;
+  monto: string | number;
+  metodo: string | null;
+  referencia: string | null;
+};
+
+export type Multa = {
+  id_multa: number;
+  id_contrato: number;
+  id_factura: number | null;
+  motivo: string | null;
+  monto: string | number;
+  fecha: string | null;
+  estado: string;
+};
+
+export type ProyectoMonitoreo = {
+  id_proyecto: number;
+  codigo: string | null;
+  nombre: string;
+  fecha_fin_plan: string | null;
+  porcentaje_avance: string | number;
+  id_responsable: number | null;
+  id_cliente: number;
+  estado: string;
+  nombre_cliente: string | null;
+  nombre_responsable: string | null;
+};

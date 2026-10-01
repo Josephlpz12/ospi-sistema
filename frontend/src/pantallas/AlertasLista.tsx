@@ -6,6 +6,8 @@ import type { Alerta } from "../tipos";
 function etiqueta(tipo: string) {
   if (tipo === "TAREA_VENCIDA") return "Tarea vencida";
   if (tipo === "AVANCE_BAJO") return "Avance bajo";
+  if (tipo === "FACTURA_VENCIDA") return "Factura vencida";
+  if (tipo === "SERVICIO_SUSPENDIDO") return "Servicio suspendido";
   return tipo;
 }
 

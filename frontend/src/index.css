@@ -239,6 +239,14 @@ small {
   margin-top: -8px;
 }
 
+.aviso-suspendido {
+  background: #fdecea;
+  color: var(--danger);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
 .seguimiento-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

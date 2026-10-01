@@ -1,4 +1,4 @@
-import type { Cliente, Proyecto } from "../tipos";
+import type { Cliente, Proyecto, Suscripcion } from "../tipos";
 import { api } from "./api";
 
 export async function listarClientes() {
@@ -7,7 +7,9 @@ export async function listarClientes() {
 }
 
 export async function obtenerFichaCliente(id: number) {
-  const datos = await api<{ cliente: Cliente; proyectos: Proyecto[] }>(`/clientes/${id}`);
+  const datos = await api<{ cliente: Cliente; proyectos: Proyecto[]; suscripciones: Suscripcion[] }>(
+    `/clientes/${id}`,
+  );
   return datos;
 }
 

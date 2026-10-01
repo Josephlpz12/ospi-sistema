@@ -11,6 +11,10 @@ import { ProyectoFormulario } from "./pantallas/ProyectoFormulario";
 import { ProyectoSeguimiento } from "./pantallas/ProyectoSeguimiento";
 import { ClienteFicha } from "./pantallas/ClienteFicha";
 import { AlertasLista } from "./pantallas/AlertasLista";
+import { Monitoreo } from "./pantallas/Monitoreo";
+import { ContratosLista } from "./pantallas/ContratosLista";
+import { ContratoFormulario } from "./pantallas/ContratoFormulario";
+import { ContratoFicha } from "./pantallas/ContratoFicha";
 
 export default function App() {
   return (
@@ -21,7 +25,11 @@ export default function App() {
           <Route element={<RutaPrivada />}>
             <Route element={<Layout />}>
               <Route path="/" element={<Panel />} />
+              <Route path="/monitoreo" element={<Monitoreo />} />
               <Route path="/alertas" element={<AlertasLista />} />
+              <Route path="/contratos" element={<ContratosLista />} />
+              <Route path="/contratos/nuevo" element={<ContratoFormulario />} />
+              <Route path="/contratos/:id" element={<ContratoFicha />} />
               <Route path="/clientes" element={<ClientesLista />} />
               <Route path="/clientes/nuevo" element={<ClienteFormulario />} />
               <Route path="/clientes/:id/editar" element={<ClienteFormulario />} />
