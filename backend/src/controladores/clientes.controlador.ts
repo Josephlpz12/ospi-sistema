@@ -36,7 +36,21 @@ export async function obtenerCliente(req: Request, res: Response) {
        ORDER BY p.id_proyecto DESC`,
       [req.params.id],
     );
-    res.json({ ok: true, cliente: resultado.rows[0], proyectos: proyectos.rows });
+    const suscripciones = await pool.query(
+      `SELECT s.id_suscripcion, s.id_producto, s.estado, s.fecha_inicio, s.fecha_fin,
+              p.nombre AS nombre_producto
+       FROM suscripciones s
+       JOIN productos_software p ON p.id_producto = s.id_producto
+       WHERE s.id_cliente = $1
+       ORDER BY s.id_suscripcion DESC`,
+      [req.params.id],
+    );
+    res.json({
+      ok: true,
+      cliente: resultado.rows[0],
+      proyectos: proyectos.rows,
+      suscripciones: suscripciones.rows,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ ok: false, mensaje: "Error al obtener el cliente" });
