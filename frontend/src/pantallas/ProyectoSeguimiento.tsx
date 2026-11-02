@@ -1,5 +1,7 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { esAdministrador, puedeActualizarSeguimiento } from "../autorizacion";
+import { useAuth } from "../contexto/AuthContexto";
 import { obtenerProyecto } from "../servicios/proyectos.servicio";
 import {
   actualizarFase,
@@ -17,7 +19,18 @@ import {
 import { ListaDocumentos } from "../componentes/ListaDocumentos";
 import type { Avance, Empleado, Fase, Proyecto, Tarea } from "../tipos";
 
+function etiquetaEstado(estado: string) {
+  if (estado === "PENDIENTE") return "Pendiente";
+  if (estado === "EN_CURSO") return "En curso";
+  if (estado === "COMPLETADA") return "Completada";
+  if (estado === "BLOQUEADA") return "Bloqueada";
+  return estado;
+}
+
 export function ProyectoSeguimiento() {
+  const { usuario } = useAuth();
+  const admin = esAdministrador(usuario?.nombre_rol);
+  const puedeEstado = puedeActualizarSeguimiento(usuario?.nombre_rol);
   const { id } = useParams();
   const idProyecto = Number(id);
   const [proyecto, setProyecto] = useState<Proyecto | null>(null);
@@ -122,18 +135,20 @@ export function ProyectoSeguimiento() {
       <div className="seguimiento-grid">
         <article className="card">
           <h2>Fases</h2>
-          <form className="form-inline" onSubmit={(e) => void altaFase(e)}>
-            <input value={nombreFase} onChange={(ev) => setNombreFase(ev.target.value)} placeholder="Nueva fase" required />
-            <button className="btn" type="submit">
-              Agregar
-            </button>
-          </form>
+          {admin ? (
+            <form className="form-inline" onSubmit={(e) => void altaFase(e)}>
+              <input value={nombreFase} onChange={(ev) => setNombreFase(ev.target.value)} placeholder="Nueva fase" required />
+              <button className="btn" type="submit">
+                Agregar
+              </button>
+            </form>
+          ) : null}
           <table>
             <thead>
               <tr>
                 <th>Fase</th>
                 <th>Estado</th>
-                <th></th>
+                {admin ? <th></th> : null}
               </tr>
             </thead>
             <tbody>
@@ -141,30 +156,36 @@ export function ProyectoSeguimiento() {
                 <tr key={f.id_fase}>
                   <td>{f.nombre}</td>
                   <td>
-                    <select
-                      value={f.estado}
-                      onChange={(ev) => {
-                        void actualizarFase(idProyecto, f.id_fase, { estado: ev.target.value }).then(cargar).catch((err: Error) => setError(err.message));
-                      }}
-                    >
-                      <option value="PENDIENTE">Pendiente</option>
-                      <option value="EN_CURSO">En curso</option>
-                      <option value="COMPLETADA">Completada</option>
-                    </select>
+                    {puedeEstado ? (
+                      <select
+                        value={f.estado}
+                        onChange={(ev) => {
+                          void actualizarFase(idProyecto, f.id_fase, { estado: ev.target.value }).then(cargar).catch((err: Error) => setError(err.message));
+                        }}
+                      >
+                        <option value="PENDIENTE">Pendiente</option>
+                        <option value="EN_CURSO">En curso</option>
+                        <option value="COMPLETADA">Completada</option>
+                      </select>
+                    ) : (
+                      etiquetaEstado(f.estado)
+                    )}
                   </td>
-                  <td>
-                    <button
-                      type="button"
-                      className="btn-text"
-                      onClick={() => {
-                        if (confirm("¿Eliminar esta fase?")) {
-                          void eliminarFase(idProyecto, f.id_fase).then(cargar).catch((err: Error) => setError(err.message));
-                        }
-                      }}
-                    >
-                      Quitar
-                    </button>
-                  </td>
+                  {admin ? (
+                    <td>
+                      <button
+                        type="button"
+                        className="btn-text"
+                        onClick={() => {
+                          if (confirm("¿Eliminar esta fase?")) {
+                            void eliminarFase(idProyecto, f.id_fase).then(cargar).catch((err: Error) => setError(err.message));
+                          }
+                        }}
+                      >
+                        Quitar
+                      </button>
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>
@@ -173,6 +194,7 @@ export function ProyectoSeguimiento() {
 
         <article className="card">
           <h2>Tareas</h2>
+          {admin ? (
           <form className="form" onSubmit={(e) => void altaTarea(e)}>
             <input value={tituloTarea} onChange={(ev) => setTituloTarea(ev.target.value)} placeholder="Título" required />
             <select value={idFaseTarea} onChange={(ev) => setIdFaseTarea(ev.target.value)}>
@@ -196,13 +218,14 @@ export function ProyectoSeguimiento() {
               Agregar tarea
             </button>
           </form>
+          ) : null}
           <table>
             <thead>
               <tr>
                 <th>Tarea</th>
                 <th>Fase</th>
                 <th>Estado</th>
-                <th></th>
+                {admin ? <th></th> : null}
               </tr>
             </thead>
             <tbody>
@@ -218,31 +241,37 @@ export function ProyectoSeguimiento() {
                   </td>
                   <td>{t.nombre_fase ?? "—"}</td>
                   <td>
-                    <select
-                      value={t.estado}
-                      onChange={(ev) => {
-                        void actualizarTarea(idProyecto, t.id_tarea, { estado: ev.target.value }).then(cargar).catch((err: Error) => setError(err.message));
-                      }}
-                    >
-                      <option value="PENDIENTE">Pendiente</option>
-                      <option value="EN_CURSO">En curso</option>
-                      <option value="COMPLETADA">Completada</option>
-                      <option value="BLOQUEADA">Bloqueada</option>
-                    </select>
+                    {puedeEstado ? (
+                      <select
+                        value={t.estado}
+                        onChange={(ev) => {
+                          void actualizarTarea(idProyecto, t.id_tarea, { estado: ev.target.value }).then(cargar).catch((err: Error) => setError(err.message));
+                        }}
+                      >
+                        <option value="PENDIENTE">Pendiente</option>
+                        <option value="EN_CURSO">En curso</option>
+                        <option value="COMPLETADA">Completada</option>
+                        <option value="BLOQUEADA">Bloqueada</option>
+                      </select>
+                    ) : (
+                      etiquetaEstado(t.estado)
+                    )}
                   </td>
-                  <td>
-                    <button
-                      type="button"
-                      className="btn-text"
-                      onClick={() => {
-                        if (confirm("¿Eliminar esta tarea?")) {
-                          void eliminarTarea(idProyecto, t.id_tarea).then(cargar).catch((err: Error) => setError(err.message));
-                        }
-                      }}
-                    >
-                      Quitar
-                    </button>
-                  </td>
+                  {admin ? (
+                    <td>
+                      <button
+                        type="button"
+                        className="btn-text"
+                        onClick={() => {
+                          if (confirm("¿Eliminar esta tarea?")) {
+                            void eliminarTarea(idProyecto, t.id_tarea).then(cargar).catch((err: Error) => setError(err.message));
+                          }
+                        }}
+                      >
+                        Quitar
+                      </button>
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>
@@ -252,6 +281,7 @@ export function ProyectoSeguimiento() {
 
       <article className="card" style={{ marginTop: 20 }}>
         <h2>Bitácora de avance</h2>
+        {puedeEstado ? (
         <form className="form-inline" onSubmit={(e) => void altaAvance(e)}>
           <input
             type="number"
@@ -266,6 +296,7 @@ export function ProyectoSeguimiento() {
             Registrar %
           </button>
         </form>
+        ) : null}
         <table>
           <thead>
             <tr>

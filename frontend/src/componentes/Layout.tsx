@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { Activity, Bell, FileText, FolderKanban, LayoutDashboard, LogOut, Users } from "lucide-react";
+import { puedeOperarFinanzas } from "../autorizacion";
 import { useAuth } from "../contexto/AuthContexto";
 
 export function Layout() {
@@ -33,10 +34,12 @@ export function Layout() {
             <FolderKanban size={18} aria-hidden />
             Proyectos
           </NavLink>
-          <NavLink to="/contratos">
-            <FileText size={18} aria-hidden />
-            Contratos
-          </NavLink>
+          {puedeOperarFinanzas(usuario?.nombre_rol) ? (
+            <NavLink to="/contratos">
+              <FileText size={18} aria-hidden />
+              Contratos
+            </NavLink>
+          ) : null}
           <NavLink to="/alertas">
             <Bell size={18} aria-hidden />
             Alertas

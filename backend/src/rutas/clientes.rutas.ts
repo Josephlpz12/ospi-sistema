@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { autenticar } from "../middleware/autenticar.js";
+import { ROLES, autorizar, todosLosRoles } from "../middleware/autorizar.js";
 import {
   actualizarCliente,
   crearCliente,
@@ -12,10 +13,10 @@ import { crearSuscripcion, listarSuscripciones } from "../controladores/suscripc
 export const clientesRutas = Router();
 
 clientesRutas.use(autenticar);
-clientesRutas.get("/", listarClientes);
-clientesRutas.get("/:id/suscripciones", listarSuscripciones);
-clientesRutas.post("/:id/suscripciones", crearSuscripcion);
-clientesRutas.get("/:id", obtenerCliente);
-clientesRutas.post("/", crearCliente);
-clientesRutas.put("/:id", actualizarCliente);
-clientesRutas.delete("/:id", desactivarCliente);
+clientesRutas.get("/", autorizar(...todosLosRoles), listarClientes);
+clientesRutas.get("/:id/suscripciones", autorizar(...todosLosRoles), listarSuscripciones);
+clientesRutas.post("/:id/suscripciones", autorizar(ROLES.admin), crearSuscripcion);
+clientesRutas.get("/:id", autorizar(...todosLosRoles), obtenerCliente);
+clientesRutas.post("/", autorizar(ROLES.admin), crearCliente);
+clientesRutas.put("/:id", autorizar(ROLES.admin), actualizarCliente);
+clientesRutas.delete("/:id", autorizar(ROLES.admin), desactivarCliente);

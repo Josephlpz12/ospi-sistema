@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { autenticar } from "../middleware/autenticar.js";
+import { autorizar, todosLosRoles } from "../middleware/autorizar.js";
 import { listarProyectosActivos } from "../controladores/monitoreo.controlador.js";
 
 export const monitoreoRutas = Router();
 
 monitoreoRutas.use(autenticar);
-monitoreoRutas.get("/proyectos-activos", listarProyectosActivos);
+monitoreoRutas.get("/proyectos-activos", autorizar(...todosLosRoles), listarProyectosActivos);

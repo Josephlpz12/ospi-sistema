@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Ban, Bell, CalendarClock, CircleCheck, FolderKanban, Receipt, TrendingDown, Users } from "lucide-react";
+import { esAdministrador } from "../autorizacion";
+import { useAuth } from "../contexto/AuthContexto";
 import { listarClientes } from "../servicios/clientes.servicio";
 import { listarProyectos } from "../servicios/proyectos.servicio";
 import { generarAlertas, listarAlertas } from "../servicios/alertas.servicio";
@@ -22,6 +24,7 @@ const iconosAlerta = {
 } as const;
 
 export function Panel() {
+  const { usuario } = useAuth();
   const [clientes, setClientes] = useState(0);
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [alertas, setAlertas] = useState<Alerta[]>([]);
@@ -84,7 +87,13 @@ export function Panel() {
       <h2>Últimos proyectos</h2>
       {proyectos.length === 0 ? (
         <p>
-          Aún no hay proyectos. <Link to="/proyectos/nuevo">Crear uno</Link>
+          Aún no hay proyectos.
+          {esAdministrador(usuario?.nombre_rol) ? (
+            <>
+              {" "}
+              <Link to="/proyectos/nuevo">Crear uno</Link>
+            </>
+          ) : null}
         </p>
       ) : (
         <table>

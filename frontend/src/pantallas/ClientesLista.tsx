@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { esAdministrador } from "../autorizacion";
+import { useAuth } from "../contexto/AuthContexto";
 import { inactivarCliente, listarClientes } from "../servicios/clientes.servicio";
 import type { Cliente } from "../tipos";
 
@@ -9,6 +11,8 @@ function nombreVisible(c: Cliente) {
 }
 
 export function ClientesLista() {
+  const { usuario } = useAuth();
+  const admin = esAdministrador(usuario?.nombre_rol);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [error, setError] = useState("");
 
@@ -38,9 +42,11 @@ export function ClientesLista() {
     <section>
       <div className="page-head">
         <h1>Clientes</h1>
-        <Link className="btn" to="/clientes/nuevo">
-          Nuevo cliente
-        </Link>
+        {admin ? (
+          <Link className="btn" to="/clientes/nuevo">
+            Nuevo cliente
+          </Link>
+        ) : null}
       </div>
       {error ? <p className="alerta">{error}</p> : null}
       <table>
@@ -60,8 +66,8 @@ export function ClientesLista() {
               <td>{c.estado}</td>
               <td className="acciones">
                 <Link to={`/clientes/${c.id_cliente}`}>Ver</Link>
-                <Link to={`/clientes/${c.id_cliente}/editar`}>Editar</Link>
-                {c.estado !== "INACTIVO" ? (
+                {admin ? <Link to={`/clientes/${c.id_cliente}/editar`}>Editar</Link> : null}
+                {admin && c.estado !== "INACTIVO" ? (
                   <button type="button" className="btn-text" onClick={() => void inactivar(c.id_cliente)}>
                     Inactivar
                   </button>

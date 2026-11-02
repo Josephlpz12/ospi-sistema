@@ -6,7 +6,7 @@ import { useAuth } from "../contexto/AuthContexto";
 export function Login() {
   const { autenticado, login } = useAuth();
   const navigate = useNavigate();
-  const [usuario, setUsuario] = useState("admin");
+  const [usuario, setUsuario] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
@@ -42,6 +42,7 @@ export function Login() {
               <input
                 value={usuario}
                 onChange={(ev) => setUsuario(ev.target.value)}
+                placeholder="Usuario o correo"
                 autoComplete="username"
                 required
               />

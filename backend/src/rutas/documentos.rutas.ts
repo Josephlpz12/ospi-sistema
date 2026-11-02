@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { autenticar } from "../middleware/autenticar.js";
+import { ROLES, autorizar, todosLosRoles } from "../middleware/autorizar.js";
 import {
   crearDocumento,
   eliminarDocumento,
@@ -10,6 +11,6 @@ import {
 export const documentosRutas = Router();
 
 documentosRutas.use(autenticar);
-documentosRutas.get("/", listarDocumentos);
-documentosRutas.post("/", subirArchivo.single("archivo"), crearDocumento);
-documentosRutas.delete("/:id", eliminarDocumento);
+documentosRutas.get("/", autorizar(...todosLosRoles), listarDocumentos);
+documentosRutas.post("/", autorizar(ROLES.admin), subirArchivo.single("archivo"), crearDocumento);
+documentosRutas.delete("/:id", autorizar(ROLES.admin), eliminarDocumento);

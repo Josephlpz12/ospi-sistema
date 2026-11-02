@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { esAdministrador } from "../autorizacion";
+import { useAuth } from "../contexto/AuthContexto";
 import { cancelarProyecto, listarProyectos } from "../servicios/proyectos.servicio";
 import type { Proyecto } from "../tipos";
 
 export function ProyectosLista() {
+  const { usuario } = useAuth();
+  const admin = esAdministrador(usuario?.nombre_rol);
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [error, setError] = useState("");
 
@@ -33,9 +37,11 @@ export function ProyectosLista() {
     <section>
       <div className="page-head">
         <h1>Proyectos</h1>
-        <Link className="btn" to="/proyectos/nuevo">
-          Nuevo proyecto
-        </Link>
+        {admin ? (
+          <Link className="btn" to="/proyectos/nuevo">
+            Nuevo proyecto
+          </Link>
+        ) : null}
       </div>
       {error ? <p className="alerta">{error}</p> : null}
       <table>
@@ -59,8 +65,8 @@ export function ProyectosLista() {
               <td>{Number(p.porcentaje_avance)}%</td>
               <td className="acciones">
                 <Link to={`/proyectos/${p.id_proyecto}/seguimiento`}>Seguimiento</Link>
-                <Link to={`/proyectos/${p.id_proyecto}/editar`}>Editar</Link>
-                {p.estado !== "Cancelado" ? (
+                {admin ? <Link to={`/proyectos/${p.id_proyecto}/editar`}>Editar</Link> : null}
+                {admin && p.estado !== "Cancelado" ? (
                   <button type="button" className="btn-text" onClick={() => void cancelar(p.id_proyecto)}>
                     Cancelar
                   </button>

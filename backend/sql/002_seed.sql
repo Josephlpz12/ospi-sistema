@@ -3,12 +3,23 @@
 
 BEGIN;
 
+UPDATE roles
+SET nombre = 'Gerente financiero',
+    descripcion = 'Contratos, facturas, pagos y suscripciones'
+WHERE nombre = 'Gerente'
+  AND NOT EXISTS (SELECT 1 FROM roles WHERE nombre = 'Gerente financiero');
+
 INSERT INTO roles (nombre, descripcion) VALUES
   ('Administrador', 'Control total del sistema'),
-  ('Gerente', 'Seguimiento de proyectos y clientes'),
-  ('Desarrollador', 'Avance y tareas asignadas'),
-  ('Comercial', 'Alta de clientes y proyectos')
+  ('Gerente financiero', 'Contratos, facturas, pagos y suscripciones'),
+  ('Desarrollador', 'Avance y tareas asignadas')
 ON CONFLICT (nombre) DO NOTHING;
+
+DELETE FROM roles r
+WHERE r.nombre = 'Comercial'
+  AND NOT EXISTS (
+    SELECT 1 FROM usuarios u WHERE u.id_rol = r.id_rol
+  );
 
 INSERT INTO departamentos (nombre, descripcion) VALUES
   ('Ventas', 'Atención comercial y clientes'),

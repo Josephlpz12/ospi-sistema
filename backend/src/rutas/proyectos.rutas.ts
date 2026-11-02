@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { autenticar } from "../middleware/autenticar.js";
+import { ROLES, autorizar, todosLosRoles } from "../middleware/autorizar.js";
 import {
   actualizarProyecto,
   cancelarProyecto,
@@ -11,8 +12,8 @@ import {
 export const proyectosRutas = Router();
 
 proyectosRutas.use(autenticar);
-proyectosRutas.get("/", listarProyectos);
-proyectosRutas.get("/:id", obtenerProyecto);
-proyectosRutas.post("/", crearProyecto);
-proyectosRutas.put("/:id", actualizarProyecto);
-proyectosRutas.delete("/:id", cancelarProyecto);
+proyectosRutas.get("/", autorizar(...todosLosRoles), listarProyectos);
+proyectosRutas.get("/:id", autorizar(...todosLosRoles), obtenerProyecto);
+proyectosRutas.post("/", autorizar(ROLES.admin), crearProyecto);
+proyectosRutas.put("/:id", autorizar(ROLES.admin), actualizarProyecto);
+proyectosRutas.delete("/:id", autorizar(ROLES.admin), cancelarProyecto);

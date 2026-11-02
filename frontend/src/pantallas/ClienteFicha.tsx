@@ -1,6 +1,8 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { esAdministrador, puedeOperarFinanzas } from "../autorizacion";
 import { ListaDocumentos } from "../componentes/ListaDocumentos";
+import { useAuth } from "../contexto/AuthContexto";
 import { obtenerFichaCliente } from "../servicios/clientes.servicio";
 import { crearSuscripcion, listarProductos } from "../servicios/finanzas.servicio";
 import type { Cliente, Producto, Proyecto, Suscripcion } from "../tipos";
@@ -15,6 +17,9 @@ function fecha(valor: string | null) {
 }
 
 export function ClienteFicha() {
+  const { usuario } = useAuth();
+  const admin = esAdministrador(usuario?.nombre_rol);
+  const finanzas = puedeOperarFinanzas(usuario?.nombre_rol);
   const { id } = useParams();
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
@@ -33,10 +38,11 @@ export function ClienteFicha() {
 
   useEffect(() => {
     cargar().catch((err: Error) => setError(err.message));
+    if (!admin) return;
     listarProductos()
       .then(setProductos)
       .catch((err: Error) => setError(err.message));
-  }, [id]);
+  }, [id, admin]);
 
   async function altaSuscripcion(e: FormEvent) {
     e.preventDefault();
@@ -69,9 +75,11 @@ export function ClienteFicha() {
       </p>
       <div className="page-head">
         <h1>{nombreVisible(cliente)}</h1>
-        <Link className="btn" to={`/clientes/${cliente.id_cliente}/editar`}>
-          Editar
-        </Link>
+        {admin ? (
+          <Link className="btn" to={`/clientes/${cliente.id_cliente}/editar`}>
+            Editar
+          </Link>
+        ) : null}
       </div>
       {error ? <p className="alerta">{error}</p> : null}
       {cliente.estado === "SUSPENDIDO" ? (
@@ -80,9 +88,11 @@ export function ClienteFicha() {
       <p className="muted-line">
         {cliente.tipo_cliente === "EMPRESA" ? "Empresa" : "Individual"} · {cliente.estado}
       </p>
-      <p>
-        <Link to={`/contratos?id_cliente=${cliente.id_cliente}`}>Ver contratos de este cliente</Link>
-      </p>
+      {finanzas ? (
+        <p>
+          <Link to={`/contratos?id_cliente=${cliente.id_cliente}`}>Ver contratos de este cliente</Link>
+        </p>
+      ) : null}
 
       <h2>Suscripciones (servicio)</h2>
       {suscripciones.length === 0 ? (
@@ -109,6 +119,7 @@ export function ClienteFicha() {
           </tbody>
         </table>
       )}
+      {admin ? (
       <form className="form-inline" onSubmit={altaSuscripcion}>
         <select
           value={subForm.id_producto}
@@ -131,6 +142,7 @@ export function ClienteFicha() {
           Alta suscripción
         </button>
       </form>
+      ) : null}
 
       <h2>Proyectos</h2>
       {proyectos.length === 0 ? (
