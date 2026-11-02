@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Activity, Bell, FileText, FolderKanban, LayoutDashboard, LogOut, Users } from "lucide-react";
 import { useAuth } from "../contexto/AuthContexto";
 
 export function Layout() {
@@ -17,13 +18,29 @@ export function Layout() {
         <p className="brand-sub">Gestión de proyectos</p>
         <nav>
           <NavLink to="/" end>
+            <LayoutDashboard size={18} aria-hidden />
             Panel
           </NavLink>
-          <NavLink to="/monitoreo">Monitoreo</NavLink>
-          <NavLink to="/clientes">Clientes</NavLink>
-          <NavLink to="/proyectos">Proyectos</NavLink>
-          <NavLink to="/contratos">Contratos</NavLink>
-          <NavLink to="/alertas">Alertas</NavLink>
+          <NavLink to="/monitoreo">
+            <Activity size={18} aria-hidden />
+            Monitoreo
+          </NavLink>
+          <NavLink to="/clientes">
+            <Users size={18} aria-hidden />
+            Clientes
+          </NavLink>
+          <NavLink to="/proyectos">
+            <FolderKanban size={18} aria-hidden />
+            Proyectos
+          </NavLink>
+          <NavLink to="/contratos">
+            <FileText size={18} aria-hidden />
+            Contratos
+          </NavLink>
+          <NavLink to="/alertas">
+            <Bell size={18} aria-hidden />
+            Alertas
+          </NavLink>
         </nav>
       </aside>
       <div className="main">
@@ -31,7 +48,8 @@ export function Layout() {
           <span>
             {usuario?.nombre_usuario} · {usuario?.nombre_rol}
           </span>
-          <button type="button" className="btn-text" onClick={cerrarSesion}>
+          <button type="button" className="btn-text btn-salir" onClick={cerrarSesion}>
+            <LogOut size={16} aria-hidden />
             Cerrar sesión
           </button>
         </header>

@@ -1,9 +1,25 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Ban, Bell, CalendarClock, CircleCheck, FolderKanban, Receipt, TrendingDown, Users } from "lucide-react";
 import { listarClientes } from "../servicios/clientes.servicio";
 import { listarProyectos } from "../servicios/proyectos.servicio";
 import { generarAlertas, listarAlertas } from "../servicios/alertas.servicio";
 import type { Alerta, Proyecto } from "../tipos";
+
+const insignias: Record<string, string> = {
+  Activo: "insignia insignia-activo",
+  Cancelado: "insignia insignia-cancelado",
+  Pausado: "insignia insignia-pausado",
+  Cotización: "insignia insignia-cotizacion",
+  Entregado: "insignia insignia-entregado",
+};
+
+const iconosAlerta = {
+  TAREA_VENCIDA: CalendarClock,
+  AVANCE_BAJO: TrendingDown,
+  FACTURA_VENCIDA: Receipt,
+  SERVICIO_SUSPENDIDO: Ban,
+} as const;
 
 export function Panel() {
   const [clientes, setClientes] = useState(0);
@@ -44,14 +60,23 @@ export function Panel() {
       {error ? <p className="alerta">{error}</p> : null}
       <div className="stats">
         <article className="card stat">
+          <span className="stat-icono stat-icono-clientes">
+            <Users size={18} aria-hidden />
+          </span>
           <span>Clientes</span>
           <strong>{clientes}</strong>
         </article>
         <article className="card stat">
+          <span className="stat-icono stat-icono-proyectos">
+            <FolderKanban size={18} aria-hidden />
+          </span>
           <span>Proyectos</span>
           <strong>{proyectos.length}</strong>
         </article>
         <article className="card stat">
+          <span className="stat-icono stat-icono-activos">
+            <CircleCheck size={18} aria-hidden />
+          </span>
           <span>Activos</span>
           <strong>{activos}</strong>
         </article>
@@ -80,7 +105,9 @@ export function Panel() {
                   <Link to={`/proyectos/${p.id_proyecto}/seguimiento`}>{p.nombre}</Link>
                 </td>
                 <td>{p.nombre_cliente}</td>
-                <td>{p.estado}</td>
+                <td>
+                  <span className={insignias[p.estado] ?? "insignia"}>{p.estado}</span>
+                </td>
                 <td>{Number(p.porcentaje_avance)}%</td>
               </tr>
             ))}
@@ -89,7 +116,7 @@ export function Panel() {
       )}
       {alertas.length > 0 ? (
         <>
-          <h2>Alertas recientes</h2>
+          <h2 className="seccion-panel">Alertas recientes</h2>
           <p>
             <Link to="/alertas">Ver todas</Link>
           </p>
@@ -101,25 +128,33 @@ export function Panel() {
               </tr>
             </thead>
             <tbody>
-              {alertas.map((a) => (
-                <tr key={a.id_alerta}>
-                  <td>{a.mensaje}</td>
-                  <td>
-                    {a.id_proyecto ? (
-                      <Link to={`/proyectos/${a.id_proyecto}/seguimiento`}>{a.nombre_proyecto}</Link>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {alertas.map((a) => {
+                const Icono = iconosAlerta[a.tipo as keyof typeof iconosAlerta] ?? Bell;
+                return (
+                  <tr key={a.id_alerta}>
+                    <td>
+                      <span className="alerta-mensaje">
+                        <Icono size={16} aria-hidden />
+                        {a.mensaje}
+                      </span>
+                    </td>
+                    <td>
+                      {a.id_proyecto ? (
+                        <Link to={`/proyectos/${a.id_proyecto}/seguimiento`}>{a.nombre_proyecto}</Link>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </>
       ) : null}
       {atencion.length > 0 ? (
         <>
-          <h2>Requieren atención</h2>
+          <h2 className="seccion-panel">Requieren atención</h2>
           <p>Avance menor a 40% o fecha de fin en los próximos 14 días.</p>
           <table>
             <thead>
