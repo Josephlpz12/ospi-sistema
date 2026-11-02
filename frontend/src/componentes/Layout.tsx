@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Activity, Bell, FileText, FolderKanban, LayoutDashboard, LogOut, Users } from "lucide-react";
-import { puedeOperarFinanzas } from "../autorizacion";
+import { Activity, Bell, FileText, FolderKanban, LayoutDashboard, LogOut, UserCog, Users } from "lucide-react";
+import { esAdministrador, puedeOperarFinanzas } from "../autorizacion";
 import { useAuth } from "../contexto/AuthContexto";
 
 export function Layout() {
@@ -44,6 +44,12 @@ export function Layout() {
             <Bell size={18} aria-hidden />
             Alertas
           </NavLink>
+          {esAdministrador(usuario?.nombre_rol) ? (
+            <NavLink to="/usuarios">
+              <UserCog size={18} aria-hidden />
+              Usuarios
+            </NavLink>
+          ) : null}
         </nav>
       </aside>
       <div className="main">

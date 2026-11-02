@@ -2,6 +2,8 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProveedor } from "./contexto/AuthContexto";
 import { Layout } from "./componentes/Layout";
 import { RutaPrivada } from "./componentes/RutaPrivada";
+import { RutaPorRol } from "./componentes/RutaPorRol";
+import { esAdministrador } from "./autorizacion";
 import { Login } from "./pantallas/Login";
 import { Panel } from "./pantallas/Panel";
 import { ClientesLista } from "./pantallas/ClientesLista";
@@ -15,6 +17,8 @@ import { Monitoreo } from "./pantallas/Monitoreo";
 import { ContratosLista } from "./pantallas/ContratosLista";
 import { ContratoFormulario } from "./pantallas/ContratoFormulario";
 import { ContratoFicha } from "./pantallas/ContratoFicha";
+import { UsuariosLista } from "./pantallas/UsuariosLista";
+import { UsuarioFormulario } from "./pantallas/UsuarioFormulario";
 
 export default function App() {
   return (
@@ -38,6 +42,11 @@ export default function App() {
               <Route path="/proyectos/nuevo" element={<ProyectoFormulario />} />
               <Route path="/proyectos/:id/editar" element={<ProyectoFormulario />} />
               <Route path="/proyectos/:id/seguimiento" element={<ProyectoSeguimiento />} />
+              <Route element={<RutaPorRol permitido={esAdministrador} />}>
+                <Route path="/usuarios" element={<UsuariosLista />} />
+                <Route path="/usuarios/nuevo" element={<UsuarioFormulario />} />
+                <Route path="/usuarios/:id/editar" element={<UsuarioFormulario />} />
+              </Route>
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

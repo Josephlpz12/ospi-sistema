@@ -6,6 +6,22 @@ export type UsuarioSesion = {
   nombre_rol: string;
 };
 
+export type Usuario = {
+  id_usuario: number;
+  nombre_usuario: string;
+  correo: string;
+  id_rol: number;
+  nombre_rol: string;
+  activo: boolean;
+  creado_en: string;
+};
+
+export type Rol = {
+  id_rol: number;
+  nombre: string;
+  descripcion: string | null;
+};
+
 export type Cliente = {
   id_cliente: number;
   tipo_cliente: "INDIVIDUAL" | "EMPRESA";
