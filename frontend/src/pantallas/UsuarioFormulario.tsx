@@ -15,6 +15,9 @@ export function UsuarioFormulario() {
   const [aviso, setAviso] = useState("");
   const [cargando, setCargando] = useState(false);
   const [nuevaClave, setNuevaClave] = useState("");
+  const [empleadoActual, setEmpleadoActual] = useState("");
+  const [registrarEmpleado, setRegistrarEmpleado] = useState(false);
+  const [empleado, setEmpleado] = useState({ nombres: "", apellidos: "", cargo: "" });
   const [form, setForm] = useState({
     nombre_usuario: "",
     correo: "",
@@ -38,12 +41,20 @@ export function UsuarioFormulario() {
           id_rol: String(u.id_rol),
           password: "",
         });
+        if (u.id_empleado) {
+          const nombre = `${u.nombres_empleado ?? ""} ${u.apellidos_empleado ?? ""}`.trim();
+          setEmpleadoActual(u.cargo_empleado ? `${nombre} · ${u.cargo_empleado}` : nombre);
+        }
       })
       .catch((err: Error) => setError(err.message));
   }, [id]);
 
   function setCampo(campo: string, valor: string) {
     setForm((prev) => ({ ...prev, [campo]: valor }));
+  }
+
+  function setCampoEmpleado(campo: string, valor: string) {
+    setEmpleado((prev) => ({ ...prev, [campo]: valor }));
   }
 
   async function enviar(e: FormEvent) {
@@ -58,6 +69,9 @@ export function UsuarioFormulario() {
     if (!editando) {
       cuerpo.nombre_usuario = form.nombre_usuario;
       cuerpo.password = form.password;
+    }
+    if (registrarEmpleado) {
+      cuerpo.empleado = empleado;
     }
     try {
       await guardarUsuario(cuerpo, id ? Number(id) : undefined);
@@ -130,6 +144,46 @@ export function UsuarioFormulario() {
             <small>Mínimo 8 caracteres.</small>
           </label>
         ) : null}
+        {empleadoActual ? (
+          <p className="muted-line">Empleado registrado: {empleadoActual}</p>
+        ) : (
+          <>
+            <label className="opcion-casilla">
+              <input
+                type="checkbox"
+                checked={registrarEmpleado}
+                onChange={(e) => setRegistrarEmpleado(e.target.checked)}
+              />
+              Registrar también como empleado
+            </label>
+            {registrarEmpleado ? (
+              <>
+                <label>
+                  Nombres del empleado
+                  <input
+                    value={empleado.nombres}
+                    onChange={(e) => setCampoEmpleado("nombres", e.target.value)}
+                    maxLength={100}
+                    required
+                  />
+                </label>
+                <label>
+                  Apellidos del empleado
+                  <input
+                    value={empleado.apellidos}
+                    onChange={(e) => setCampoEmpleado("apellidos", e.target.value)}
+                    maxLength={100}
+                    required
+                  />
+                </label>
+                <label>
+                  Cargo (opcional)
+                  <input value={empleado.cargo} onChange={(e) => setCampoEmpleado("cargo", e.target.value)} maxLength={80} />
+                </label>
+              </>
+            ) : null}
+          </>
+        )}
         <div className="form-actions">
           <button className="btn" type="submit" disabled={cargando}>
             Guardar

@@ -6,10 +6,14 @@ import { ROLES } from "../middleware/autorizar.js";
 import { registrarCambio, registrarCambioAparte } from "../servicios/bitacora.servicio.js";
 
 const SQL_USUARIO = `
-  SELECT u.id_usuario, u.nombre_usuario, u.correo, u.id_rol, r.nombre AS nombre_rol, u.activo, u.creado_en
+  SELECT u.id_usuario, u.nombre_usuario, u.correo, u.id_rol, r.nombre AS nombre_rol, u.activo, u.creado_en,
+         em.id_empleado, em.nombres AS nombres_empleado, em.apellidos AS apellidos_empleado, em.cargo AS cargo_empleado
   FROM usuarios u
   JOIN roles r ON r.id_rol = u.id_rol
+  LEFT JOIN empleados em ON em.id_usuario = u.id_usuario
 `;
+
+type DatosEmpleado = { nombres: string; apellidos: string; cargo: string | null };
 
 const FORMATO_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -24,6 +28,27 @@ function validarClave(clave: string) {
   return null;
 }
 
+function leerEmpleado(cuerpo: unknown): { error: string } | { empleado: DatosEmpleado | null } {
+  if (cuerpo === undefined || cuerpo === null) return { empleado: null };
+  const datos = cuerpo as Record<string, unknown>;
+  const nombres = String(datos.nombres ?? "").trim();
+  const apellidos = String(datos.apellidos ?? "").trim();
+  const cargo = String(datos.cargo ?? "").trim();
+  if (!nombres || !apellidos) return { error: "Ingrese nombres y apellidos del empleado" };
+  if (nombres.length > 100 || apellidos.length > 100) {
+    return { error: "Los nombres y apellidos del empleado no pueden superar los 100 caracteres" };
+  }
+  if (cargo.length > 80) return { error: "El cargo no puede superar los 80 caracteres" };
+  return { empleado: { nombres, apellidos, cargo: cargo || null } };
+}
+
+async function insertarEmpleado(cx: PoolClient, idUsuario: number, empleado: DatosEmpleado) {
+  await cx.query(
+    "INSERT INTO empleados (id_usuario, nombres, apellidos, cargo, activo) VALUES ($1, $2, $3, $4, TRUE)",
+    [idUsuario, empleado.nombres, empleado.apellidos, empleado.cargo],
+  );
+}
+
 function mensajeDuplicado(error: unknown) {
   const detalle = error as { code?: string; constraint?: string };
   if (detalle.code !== "23505") return null;
@@ -31,7 +56,7 @@ function mensajeDuplicado(error: unknown) {
   return "Ese nombre de usuario ya está en uso";
 }
 
-async function rechazar(cx: PoolClient, res: Response, estado: number, mensaje: string) {
+export async function rechazar(cx: PoolClient, res: Response, estado: number, mensaje: string) {
   await cx.query("ROLLBACK");
   res.status(estado).json({ ok: false, mensaje });
 }
@@ -125,6 +150,12 @@ export async function crearUsuario(req: Request, res: Response) {
     res.status(400).json({ ok: false, mensaje: errorClave });
     return;
   }
+  const datosEmpleado = leerEmpleado(req.body.empleado);
+  if ("error" in datosEmpleado) {
+    res.status(400).json({ ok: false, mensaje: datosEmpleado.error });
+    return;
+  }
+  const empleado = datosEmpleado.empleado;
 
   try {
     const rol = await pool.query("SELECT id_rol FROM roles WHERE id_rol = $1", [
@@ -150,22 +181,36 @@ export async function crearUsuario(req: Request, res: Response) {
     }
 
     const hash = await bcrypt.hash(clave, 10);
-    const insertado = await pool.query(
-      `INSERT INTO usuarios (id_rol, nombre_usuario, correo, hash_password, activo)
-       VALUES ($1, $2, $3, $4, TRUE)
-       RETURNING id_usuario`,
-      [idRol, nombreUsuario, correo, hash],
-    );
-    const creado = await pool.query(`${SQL_USUARIO} WHERE u.id_usuario = $1`, [insertado.rows[0].id_usuario]);
-    await registrarCambioAparte({
-      idUsuario: req.usuario?.id_usuario,
-      tabla: "usuarios",
-      idRegistro: insertado.rows[0].id_usuario,
-      accion: "CREAR",
-      despues: creado.rows[0],
-      nota: "Se definió una contraseña inicial",
-    });
-    res.status(201).json({ ok: true, usuario: creado.rows[0] });
+    const cx = await pool.connect();
+    try {
+      await cx.query("BEGIN");
+      const insertado = await cx.query(
+        `INSERT INTO usuarios (id_rol, nombre_usuario, correo, hash_password, activo)
+         VALUES ($1, $2, $3, $4, TRUE)
+         RETURNING id_usuario`,
+        [idRol, nombreUsuario, correo, hash],
+      );
+      const idNuevo = insertado.rows[0].id_usuario as number;
+      if (empleado) await insertarEmpleado(cx, idNuevo, empleado);
+      const creado = await leerUsuario(cx, idNuevo);
+      await registrarCambio(cx, {
+        idUsuario: req.usuario?.id_usuario,
+        tabla: "usuarios",
+        idRegistro: idNuevo,
+        accion: "CREAR",
+        despues: creado,
+        nota: empleado
+          ? `Se definió una contraseña inicial y se registró como empleado: ${empleado.nombres} ${empleado.apellidos}`
+          : "Se definió una contraseña inicial",
+      });
+      await cx.query("COMMIT");
+      res.status(201).json({ ok: true, usuario: creado });
+    } catch (error) {
+      await cx.query("ROLLBACK");
+      throw error;
+    } finally {
+      cx.release();
+    }
   } catch (error) {
     const duplicado = mensajeDuplicado(error);
     if (duplicado) {
@@ -190,6 +235,12 @@ export async function actualizarUsuario(req: Request, res: Response) {
     res.status(400).json({ ok: false, mensaje: "Ingrese un correo válido" });
     return;
   }
+  const datosEmpleado = leerEmpleado(req.body.empleado);
+  if ("error" in datosEmpleado) {
+    res.status(400).json({ ok: false, mensaje: datosEmpleado.error });
+    return;
+  }
+  const empleado = datosEmpleado.empleado;
 
   const cx = await pool.connect();
   try {
@@ -230,18 +281,24 @@ export async function actualizarUsuario(req: Request, res: Response) {
     }
 
     const antes = await leerUsuario(cx, id);
+    if (empleado && antes.id_empleado) {
+      await rechazar(cx, res, 409, "Ese usuario ya está registrado como empleado");
+      return;
+    }
     await cx.query("UPDATE usuarios SET correo = $2, id_rol = $3 WHERE id_usuario = $1", [id, correo, idRol]);
+    if (empleado) await insertarEmpleado(cx, id, empleado);
+    const despues = await leerUsuario(cx, id);
     await registrarCambio(cx, {
       idUsuario: req.usuario?.id_usuario,
       tabla: "usuarios",
       idRegistro: id,
       accion: "EDITAR",
       antes,
-      despues: await leerUsuario(cx, id),
+      despues,
+      nota: empleado ? `Se registró como empleado: ${empleado.nombres} ${empleado.apellidos}` : undefined,
     });
     await cx.query("COMMIT");
-    const actualizado = await pool.query(`${SQL_USUARIO} WHERE u.id_usuario = $1`, [id]);
-    res.json({ ok: true, usuario: actualizado.rows[0] });
+    res.json({ ok: true, usuario: despues });
   } catch (error) {
     await cx.query("ROLLBACK");
     const duplicado = mensajeDuplicado(error);

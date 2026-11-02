@@ -3,6 +3,7 @@ import { pool } from "../db.js";
 import { proyectoExiste } from "./fases.controlador.js";
 import { asegurarAlerta } from "./alertas.controlador.js";
 import { registrarCambio, registrarCambioAparte } from "../servicios/bitacora.servicio.js";
+import { quitarAsignacionesDeTarea } from "./asignaciones.controlador.js";
 
 const SQL_TAREA = `
   SELECT t.id_tarea, t.id_proyecto, t.id_fase, t.id_asignado, t.titulo, t.descripcion,
@@ -133,7 +134,7 @@ export async function eliminarTarea(req: Request, res: Response) {
   const cliente = await pool.connect();
   try {
     await cliente.query("BEGIN");
-    await cliente.query("DELETE FROM asignaciones WHERE id_tarea = $1", [idTarea]);
+    await quitarAsignacionesDeTarea(cliente, idTarea, req.usuario?.id_usuario);
     await cliente.query("UPDATE comentarios SET id_tarea = NULL WHERE id_tarea = $1", [idTarea]);
     const resultado = await cliente.query(
       "DELETE FROM tareas WHERE id_tarea = $1 AND id_proyecto = $2 RETURNING *",

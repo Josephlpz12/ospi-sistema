@@ -64,10 +64,11 @@ export async function registrarAvance(req: Request, res: Response) {
 export async function listarEmpleados(_req: Request, res: Response) {
   try {
     const resultado = await pool.query(
-      `SELECT id_empleado, nombres, apellidos, cargo, activo
-       FROM empleados
-       WHERE activo = TRUE
-       ORDER BY apellidos, nombres`,
+      `SELECT e.id_empleado, e.nombres, e.apellidos, e.cargo, e.activo
+       FROM empleados e
+       JOIN usuarios u ON u.id_usuario = e.id_usuario
+       WHERE e.activo = TRUE AND u.activo = TRUE
+       ORDER BY e.apellidos, e.nombres`,
     );
     res.json({ ok: true, empleados: resultado.rows });
   } catch (error) {

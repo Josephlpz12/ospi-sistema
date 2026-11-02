@@ -14,6 +14,8 @@ const TIPOS_REGISTRO: Record<string, string> = {
   multas: "Multa",
   suscripciones: "Suscripción",
   usuarios: "Usuario",
+  asignaciones: "Asignación",
+  comentarios: "Comentario",
 };
 
 const ACCIONES: Record<string, string> = {
@@ -24,6 +26,9 @@ const ACCIONES: Record<string, string> = {
   ACTIVAR: "Activación",
   ELIMINAR: "Eliminación",
   RESTABLECER_CLAVE: "Restablecimiento de contraseña",
+  ASIGNAR: "Asignación",
+  DESASIGNAR: "Desasignación",
+  COMENTAR: "Comentario",
 };
 
 const FILTROS_INICIALES: FiltrosBitacora = { pagina: 1, id_usuario: "", tabla: "", desde: "", hasta: "" };

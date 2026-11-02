@@ -14,6 +14,10 @@ export type Usuario = {
   nombre_rol: string;
   activo: boolean;
   creado_en: string;
+  id_empleado: number | null;
+  nombres_empleado: string | null;
+  apellidos_empleado: string | null;
+  cargo_empleado: string | null;
 };
 
 export type Rol = {
@@ -117,6 +121,30 @@ export type Empleado = {
   apellidos: string;
   cargo: string | null;
   activo: boolean;
+};
+
+export type Asignacion = {
+  id_asignacion: number;
+  id_proyecto: number;
+  id_empleado: number;
+  id_tarea: number | null;
+  rol_en_proyecto: string | null;
+  fecha_asignacion: string;
+  nombre_empleado: string;
+  cargo: string | null;
+  titulo_tarea: string | null;
+  nombre_proyecto: string;
+};
+
+export type Comentario = {
+  id_comentario: number;
+  id_proyecto: number;
+  id_tarea: number | null;
+  id_usuario: number | null;
+  texto: string;
+  creado_en: string;
+  nombre_usuario: string | null;
+  titulo_tarea: string | null;
 };
 
 export type Alerta = {

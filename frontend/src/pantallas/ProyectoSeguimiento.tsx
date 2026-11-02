@@ -17,6 +17,8 @@ import {
   registrarAvance,
 } from "../servicios/seguimiento.servicio";
 import { ListaDocumentos } from "../componentes/ListaDocumentos";
+import { SeccionAsignaciones } from "../componentes/SeccionAsignaciones";
+import { SeccionComentarios } from "../componentes/SeccionComentarios";
 import type { Avance, Empleado, Fase, Proyecto, Tarea } from "../tipos";
 
 function etiquetaEstado(estado: string) {
@@ -318,6 +320,9 @@ export function ProyectoSeguimiento() {
           </tbody>
         </table>
       </article>
+
+      <SeccionAsignaciones idProyecto={idProyecto} tareas={tareas} empleados={empleados} puedeAsignar={admin} />
+      <SeccionComentarios idProyecto={idProyecto} tareas={tareas} puedeComentar={puedeEstado} />
 
       <div style={{ marginTop: 20 }}>
         <ListaDocumentos id_proyecto={idProyecto} />

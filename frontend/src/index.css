@@ -595,6 +595,54 @@ small {
   gap: 4px;
 }
 
+.opcion-casilla {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.seccion-plegable {
+  margin-top: 20px;
+}
+
+.seccion-plegable summary {
+  cursor: pointer;
+  font-family: Poppins, Inter, sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--azul-marca);
+}
+
+.seccion-plegable[open] summary {
+  margin-bottom: 16px;
+}
+
+.lista-comentarios {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lista-comentarios li {
+  background: var(--fondo-claro);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.comentario-cabecera {
+  margin: 0 0 6px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.comentario-texto {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
 .paginacion {
   display: flex;
   align-items: center;

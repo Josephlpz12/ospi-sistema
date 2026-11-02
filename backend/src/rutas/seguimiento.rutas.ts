@@ -4,6 +4,8 @@ import { ROLES, autorizar, todosLosRoles } from "../middleware/autorizar.js";
 import { actualizarFase, crearFase, eliminarFase, listarFases } from "../controladores/fases.controlador.js";
 import { actualizarTarea, crearTarea, eliminarTarea, listarTareas } from "../controladores/tareas.controlador.js";
 import { listarAvances, registrarAvance } from "../controladores/avances.controlador.js";
+import { asignarEmpleado, listarAsignaciones, quitarAsignacion } from "../controladores/asignaciones.controlador.js";
+import { crearComentario, listarComentarios } from "../controladores/comentarios.controlador.js";
 
 export const seguimientoRutas = Router();
 
@@ -22,3 +24,8 @@ seguimientoRutas.put("/:id/tareas/:idTarea", estado, actualizarTarea);
 seguimientoRutas.delete("/:id/tareas/:idTarea", soloAdmin, eliminarTarea);
 seguimientoRutas.get("/:id/avances", consulta, listarAvances);
 seguimientoRutas.post("/:id/avances", estado, registrarAvance);
+seguimientoRutas.get("/:id/asignaciones", consulta, listarAsignaciones);
+seguimientoRutas.post("/:id/asignaciones", soloAdmin, asignarEmpleado);
+seguimientoRutas.delete("/:id/asignaciones/:idAsignacion", soloAdmin, quitarAsignacion);
+seguimientoRutas.get("/:id/comentarios", consulta, listarComentarios);
+seguimientoRutas.post("/:id/comentarios", estado, crearComentario);
