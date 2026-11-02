@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { pool } from "../db.js";
 import { proyectoExiste } from "./fases.controlador.js";
 import { asegurarAlerta } from "./alertas.controlador.js";
+import { registrarCambio, registrarCambioAparte } from "../servicios/bitacora.servicio.js";
 
 const SQL_TAREA = `
   SELECT t.id_tarea, t.id_proyecto, t.id_fase, t.id_asignado, t.titulo, t.descripcion,
@@ -57,6 +58,13 @@ export async function crearTarea(req: Request, res: Response) {
     );
     const creado = await pool.query(`${SQL_TAREA} WHERE t.id_tarea = $1`, [insertado.rows[0].id_tarea]);
     const tarea = creado.rows[0];
+    await registrarCambioAparte({
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "tareas",
+      idRegistro: tarea.id_tarea,
+      accion: "CREAR",
+      despues: tarea,
+    });
     if (tarea.fecha_limite && new Date(tarea.fecha_limite) < new Date() && tarea.estado !== "COMPLETADA") {
       await asegurarAlerta(idProyecto, "TAREA_VENCIDA", `Tarea vencida: ${tarea.titulo}`);
     }
@@ -71,6 +79,7 @@ export async function actualizarTarea(req: Request, res: Response) {
   const idProyecto = Number(req.params.id);
   const idTarea = Number(req.params.idTarea);
   try {
+    const antes = await pool.query(`${SQL_TAREA} WHERE t.id_tarea = $1 AND t.id_proyecto = $2`, [idTarea, idProyecto]);
     const resultado = await pool.query(
       `UPDATE tareas SET
          id_fase = COALESCE($3, id_fase),
@@ -100,6 +109,14 @@ export async function actualizarTarea(req: Request, res: Response) {
     }
     const actualizado = await pool.query(`${SQL_TAREA} WHERE t.id_tarea = $1`, [idTarea]);
     const tarea = actualizado.rows[0];
+    await registrarCambioAparte({
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "tareas",
+      idRegistro: idTarea,
+      accion: "EDITAR",
+      antes: antes.rows[0],
+      despues: tarea,
+    });
     if (tarea.fecha_limite && new Date(tarea.fecha_limite) < new Date() && tarea.estado !== "COMPLETADA") {
       await asegurarAlerta(idProyecto, "TAREA_VENCIDA", `Tarea vencida: ${tarea.titulo}`);
     }
@@ -119,7 +136,7 @@ export async function eliminarTarea(req: Request, res: Response) {
     await cliente.query("DELETE FROM asignaciones WHERE id_tarea = $1", [idTarea]);
     await cliente.query("UPDATE comentarios SET id_tarea = NULL WHERE id_tarea = $1", [idTarea]);
     const resultado = await cliente.query(
-      "DELETE FROM tareas WHERE id_tarea = $1 AND id_proyecto = $2 RETURNING id_tarea",
+      "DELETE FROM tareas WHERE id_tarea = $1 AND id_proyecto = $2 RETURNING *",
       [idTarea, idProyecto],
     );
     if (!resultado.rows[0]) {
@@ -127,6 +144,13 @@ export async function eliminarTarea(req: Request, res: Response) {
       res.status(404).json({ ok: false, mensaje: "Tarea no encontrada" });
       return;
     }
+    await registrarCambio(cliente, {
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "tareas",
+      idRegistro: idTarea,
+      accion: "ELIMINAR",
+      antes: resultado.rows[0],
+    });
     await cliente.query("COMMIT");
     res.json({ ok: true, mensaje: "Tarea eliminada" });
   } catch (error) {

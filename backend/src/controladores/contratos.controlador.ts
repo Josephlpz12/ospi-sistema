@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { pool } from "../db.js";
+import { cambiarEstadoRegistrado, registrarCambioAparte } from "../servicios/bitacora.servicio.js";
 
 const SQL_CONTRATO = `
   SELECT c.id_contrato, c.id_cliente, c.id_proyecto, c.id_suscripcion, c.numero,
@@ -85,6 +86,13 @@ export async function crearContrato(req: Request, res: Response) {
       ],
     );
     const creado = await pool.query(`${SQL_CONTRATO} WHERE c.id_contrato = $1`, [insertado.rows[0].id_contrato]);
+    await registrarCambioAparte({
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "contratos",
+      idRegistro: insertado.rows[0].id_contrato,
+      accion: "CREAR",
+      despues: creado.rows[0],
+    });
     res.status(201).json({ ok: true, contrato: creado.rows[0] });
   } catch (error) {
     console.error(error);
@@ -131,13 +139,28 @@ export async function reactivarContrato(req: Request, res: Response) {
     const cx = await pool.connect();
     try {
       await cx.query("BEGIN");
-      await cx.query(`UPDATE contratos SET estado = 'VIGENTE' WHERE id_contrato = $1`, [id]);
+      const idUsuario = req.usuario?.id_usuario;
+      await cambiarEstadoRegistrado(cx, {
+        idUsuario,
+        tabla: "contratos",
+        id,
+        estado: "VIGENTE",
+        nota: "Servicio reactivado",
+      });
       if (contrato.rows[0].id_suscripcion) {
-        await cx.query(`UPDATE suscripciones SET estado = 'ACTIVA' WHERE id_suscripcion = $1`, [
-          contrato.rows[0].id_suscripcion,
-        ]);
+        await cambiarEstadoRegistrado(cx, {
+          idUsuario,
+          tabla: "suscripciones",
+          id: contrato.rows[0].id_suscripcion,
+          estado: "ACTIVA",
+        });
       }
-      await cx.query(`UPDATE clientes SET estado = 'ACTIVO' WHERE id_cliente = $1`, [contrato.rows[0].id_cliente]);
+      await cambiarEstadoRegistrado(cx, {
+        idUsuario,
+        tabla: "clientes",
+        id: contrato.rows[0].id_cliente,
+        estado: "ACTIVO",
+      });
       await cx.query("COMMIT");
     } catch (error) {
       await cx.query("ROLLBACK");
@@ -161,6 +184,7 @@ export async function actualizarMulta(req: Request, res: Response) {
     return;
   }
   try {
+    const antes = await pool.query("SELECT * FROM multas WHERE id_multa = $1", [req.params.id]);
     const resultado = await pool.query(
       `UPDATE multas SET estado = $2 WHERE id_multa = $1
        RETURNING id_multa, id_contrato, id_factura, motivo, monto, fecha, estado`,
@@ -170,6 +194,14 @@ export async function actualizarMulta(req: Request, res: Response) {
       res.status(404).json({ ok: false, mensaje: "Multa no encontrada" });
       return;
     }
+    await registrarCambioAparte({
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "multas",
+      idRegistro: resultado.rows[0].id_multa,
+      accion: "EDITAR",
+      antes: antes.rows[0],
+      despues: resultado.rows[0],
+    });
     res.json({ ok: true, multa: resultado.rows[0] });
   } catch (error) {
     console.error(error);

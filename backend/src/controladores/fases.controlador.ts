@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { pool } from "../db.js";
+import { registrarCambio, registrarCambioAparte } from "../servicios/bitacora.servicio.js";
 
 export async function proyectoExiste(id: number) {
   const r = await pool.query("SELECT id_proyecto FROM proyectos WHERE id_proyecto = $1", [id]);
@@ -50,6 +51,13 @@ export async function crearFase(req: Request, res: Response) {
        RETURNING id_fase, id_proyecto, nombre, orden, fecha_inicio, fecha_fin, estado`,
       [idProyecto, nombre, orden, req.body.fecha_inicio ?? null, req.body.fecha_fin ?? null, req.body.estado ?? "PENDIENTE"],
     );
+    await registrarCambioAparte({
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "fases_proyecto",
+      idRegistro: insertado.rows[0].id_fase,
+      accion: "CREAR",
+      despues: insertado.rows[0],
+    });
     res.status(201).json({ ok: true, fase: insertado.rows[0] });
   } catch (error) {
     console.error(error);
@@ -61,6 +69,10 @@ export async function actualizarFase(req: Request, res: Response) {
   const idProyecto = Number(req.params.id);
   const idFase = Number(req.params.idFase);
   try {
+    const antes = await pool.query("SELECT * FROM fases_proyecto WHERE id_fase = $1 AND id_proyecto = $2", [
+      idFase,
+      idProyecto,
+    ]);
     const resultado = await pool.query(
       `UPDATE fases_proyecto SET
          nombre = COALESCE($3, nombre),
@@ -84,6 +96,14 @@ export async function actualizarFase(req: Request, res: Response) {
       res.status(404).json({ ok: false, mensaje: "Fase no encontrada" });
       return;
     }
+    await registrarCambioAparte({
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "fases_proyecto",
+      idRegistro: idFase,
+      accion: "EDITAR",
+      antes: antes.rows[0],
+      despues: resultado.rows[0],
+    });
     res.json({ ok: true, fase: resultado.rows[0] });
   } catch (error) {
     console.error(error);
@@ -99,7 +119,7 @@ export async function eliminarFase(req: Request, res: Response) {
     await cliente.query("BEGIN");
     await cliente.query("UPDATE tareas SET id_fase = NULL WHERE id_fase = $1 AND id_proyecto = $2", [idFase, idProyecto]);
     const resultado = await cliente.query(
-      "DELETE FROM fases_proyecto WHERE id_fase = $1 AND id_proyecto = $2 RETURNING id_fase",
+      "DELETE FROM fases_proyecto WHERE id_fase = $1 AND id_proyecto = $2 RETURNING *",
       [idFase, idProyecto],
     );
     if (!resultado.rows[0]) {
@@ -107,6 +127,13 @@ export async function eliminarFase(req: Request, res: Response) {
       res.status(404).json({ ok: false, mensaje: "Fase no encontrada" });
       return;
     }
+    await registrarCambio(cliente, {
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "fases_proyecto",
+      idRegistro: idFase,
+      accion: "ELIMINAR",
+      antes: resultado.rows[0],
+    });
     await cliente.query("COMMIT");
     res.json({ ok: true, mensaje: "Fase eliminada" });
   } catch (error) {

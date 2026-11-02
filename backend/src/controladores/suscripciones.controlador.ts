@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { pool } from "../db.js";
+import { registrarCambioAparte } from "../servicios/bitacora.servicio.js";
 
 export async function listarSuscripciones(req: Request, res: Response) {
   try {
@@ -39,6 +40,13 @@ export async function crearSuscripcion(req: Request, res: Response) {
        RETURNING id_suscripcion, id_cliente, id_producto, estado, fecha_inicio, fecha_fin`,
       [idCliente, idProducto, req.body.estado ?? "ACTIVA", fechaInicio, req.body.fecha_fin ?? null],
     );
+    await registrarCambioAparte({
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "suscripciones",
+      idRegistro: insertado.rows[0].id_suscripcion,
+      accion: "CREAR",
+      despues: insertado.rows[0],
+    });
     res.status(201).json({ ok: true, suscripcion: insertado.rows[0] });
   } catch (error) {
     console.error(error);
@@ -53,6 +61,7 @@ export async function actualizarSuscripcion(req: Request, res: Response) {
     return;
   }
   try {
+    const antes = await pool.query("SELECT * FROM suscripciones WHERE id_suscripcion = $1", [req.params.id]);
     const resultado = await pool.query(
       `UPDATE suscripciones SET
          estado = COALESCE($2, estado),
@@ -65,6 +74,14 @@ export async function actualizarSuscripcion(req: Request, res: Response) {
       res.status(404).json({ ok: false, mensaje: "Suscripción no encontrada" });
       return;
     }
+    await registrarCambioAparte({
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "suscripciones",
+      idRegistro: resultado.rows[0].id_suscripcion,
+      accion: "EDITAR",
+      antes: antes.rows[0],
+      despues: resultado.rows[0],
+    });
     res.json({ ok: true, suscripcion: resultado.rows[0] });
   } catch (error) {
     console.error(error);

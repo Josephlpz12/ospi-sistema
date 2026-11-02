@@ -22,6 +22,17 @@ export type Rol = {
   descripcion: string | null;
 };
 
+export type RegistroBitacora = {
+  id_historial: number;
+  tabla: string;
+  id_registro: number;
+  accion: string;
+  id_usuario: number | null;
+  nombre_usuario: string | null;
+  creado_en: string;
+  lineas: string[];
+};
+
 export type Cliente = {
   id_cliente: number;
   tipo_cliente: "INDIVIDUAL" | "EMPRESA";

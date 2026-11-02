@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { pool } from "../db.js";
+import { cambiarEstadoRegistrado, registrarCambio, registrarCambioAparte } from "../servicios/bitacora.servicio.js";
 
 export async function listarFacturas(req: Request, res: Response) {
   try {
@@ -38,6 +39,13 @@ export async function crearFactura(req: Request, res: Response) {
        RETURNING *`,
       [idContrato, numero, req.body.fecha_emision ?? null, req.body.fecha_vencimiento ?? null, monto],
     );
+    await registrarCambioAparte({
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "facturas",
+      idRegistro: insertado.rows[0].id_factura,
+      accion: "CREAR",
+      despues: insertado.rows[0],
+    });
     res.status(201).json({ ok: true, factura: insertado.rows[0] });
   } catch (error) {
     console.error(error);
@@ -45,7 +53,7 @@ export async function crearFactura(req: Request, res: Response) {
   }
 }
 
-export async function revisarFacturasVencidas(_req: Request, res: Response) {
+export async function revisarFacturasVencidas(req: Request, res: Response) {
   try {
     const resultado = await pool.query(
       `UPDATE facturas
@@ -56,6 +64,15 @@ export async function revisarFacturasVencidas(_req: Request, res: Response) {
        RETURNING id_factura, numero, id_contrato`,
     );
     for (const fila of resultado.rows) {
+      await registrarCambioAparte({
+        idUsuario: req.usuario?.id_usuario,
+        tabla: "facturas",
+        idRegistro: fila.id_factura,
+        accion: "CAMBIAR_ESTADO",
+        antes: { estado: "PENDIENTE" },
+        despues: { estado: "VENCIDA" },
+        nota: `Factura ${fila.numero} vencida por fecha`,
+      });
       await pool.query(
         `INSERT INTO alertas (id_proyecto, id_factura, tipo, mensaje)
          SELECT ct.id_proyecto, $1, 'FACTURA_VENCIDA', $2
@@ -108,8 +125,21 @@ export async function registrarPago(req: Request, res: Response) {
     );
     const suma = await cx.query(`SELECT COALESCE(SUM(monto), 0) AS total FROM pagos WHERE id_factura = $1`, [idFactura]);
     const cubierto = Number(suma.rows[0].total) >= Number(factura.rows[0].monto);
+    await registrarCambio(cx, {
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "pagos",
+      idRegistro: pago.rows[0].id_pago,
+      accion: "CREAR",
+      despues: pago.rows[0],
+    });
     if (cubierto) {
-      await cx.query(`UPDATE facturas SET estado = 'PAGADA' WHERE id_factura = $1`, [idFactura]);
+      await cambiarEstadoRegistrado(cx, {
+        idUsuario: req.usuario?.id_usuario,
+        tabla: "facturas",
+        id: idFactura,
+        estado: "PAGADA",
+        nota: "Pago completo registrado",
+      });
     }
     await cx.query("COMMIT");
     const actualizada = await pool.query(
@@ -154,7 +184,14 @@ export async function aplicarMora(req: Request, res: Response) {
       return;
     }
 
-    await cx.query(`UPDATE facturas SET estado = 'VENCIDA' WHERE id_factura = $1`, [idFactura]);
+    const idUsuario = req.usuario?.id_usuario;
+    await cambiarEstadoRegistrado(cx, {
+      idUsuario,
+      tabla: "facturas",
+      id: idFactura,
+      estado: "VENCIDA",
+      nota: "Mora aplicada",
+    });
 
     const porcentaje = Number(req.body.porcentaje);
     const montoMulta =
@@ -168,17 +205,53 @@ export async function aplicarMora(req: Request, res: Response) {
       [f.id_contrato, idFactura, motivo, montoMulta],
     );
 
-    await cx.query(`UPDATE contratos SET estado = 'INCUMPLIDO' WHERE id_contrato = $1`, [f.id_contrato]);
-    await cx.query(`UPDATE clientes SET estado = 'SUSPENDIDO' WHERE id_cliente = $1`, [f.id_cliente]);
+    await registrarCambio(cx, {
+      idUsuario,
+      tabla: "multas",
+      idRegistro: multa.rows[0].id_multa,
+      accion: "CREAR",
+      despues: multa.rows[0],
+    });
+
+    await cambiarEstadoRegistrado(cx, {
+      idUsuario,
+      tabla: "contratos",
+      id: f.id_contrato,
+      estado: "INCUMPLIDO",
+      nota: "Contrato incumplido por mora",
+    });
+    await cambiarEstadoRegistrado(cx, {
+      idUsuario,
+      tabla: "clientes",
+      id: f.id_cliente,
+      estado: "SUSPENDIDO",
+      nota: "Cliente suspendido por mora",
+    });
 
     if (f.id_suscripcion) {
-      await cx.query(`UPDATE suscripciones SET estado = 'SUSPENDIDA' WHERE id_suscripcion = $1`, [f.id_suscripcion]);
+      await cambiarEstadoRegistrado(cx, {
+        idUsuario,
+        tabla: "suscripciones",
+        id: f.id_suscripcion,
+        estado: "SUSPENDIDA",
+      });
     } else {
-      await cx.query(
+      const suspendidas = await cx.query(
         `UPDATE suscripciones SET estado = 'SUSPENDIDA'
-         WHERE id_cliente = $1 AND estado = 'ACTIVA'`,
+         WHERE id_cliente = $1 AND estado = 'ACTIVA'
+         RETURNING id_suscripcion`,
         [f.id_cliente],
       );
+      for (const suspendida of suspendidas.rows) {
+        await registrarCambio(cx, {
+          idUsuario,
+          tabla: "suscripciones",
+          idRegistro: suspendida.id_suscripcion,
+          accion: "CAMBIAR_ESTADO",
+          antes: { estado: "ACTIVA" },
+          despues: { estado: "SUSPENDIDA" },
+        });
+      }
     }
 
     await cx.query(

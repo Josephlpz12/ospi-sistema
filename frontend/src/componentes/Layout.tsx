@@ -1,5 +1,15 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Activity, Bell, FileText, FolderKanban, LayoutDashboard, LogOut, UserCog, Users } from "lucide-react";
+import {
+  Activity,
+  Bell,
+  FileText,
+  FolderKanban,
+  LayoutDashboard,
+  LogOut,
+  ScrollText,
+  UserCog,
+  Users,
+} from "lucide-react";
 import { esAdministrador, puedeOperarFinanzas } from "../autorizacion";
 import { useAuth } from "../contexto/AuthContexto";
 
@@ -48,6 +58,12 @@ export function Layout() {
             <NavLink to="/usuarios">
               <UserCog size={18} aria-hidden />
               Usuarios
+            </NavLink>
+          ) : null}
+          {esAdministrador(usuario?.nombre_rol) ? (
+            <NavLink to="/bitacora">
+              <ScrollText size={18} aria-hidden />
+              Bitácora
             </NavLink>
           ) : null}
         </nav>

@@ -19,6 +19,7 @@ import { ContratoFormulario } from "./pantallas/ContratoFormulario";
 import { ContratoFicha } from "./pantallas/ContratoFicha";
 import { UsuariosLista } from "./pantallas/UsuariosLista";
 import { UsuarioFormulario } from "./pantallas/UsuarioFormulario";
+import { Bitacora } from "./pantallas/Bitacora";
 
 export default function App() {
   return (
@@ -46,6 +47,7 @@ export default function App() {
                 <Route path="/usuarios" element={<UsuariosLista />} />
                 <Route path="/usuarios/nuevo" element={<UsuarioFormulario />} />
                 <Route path="/usuarios/:id/editar" element={<UsuarioFormulario />} />
+                <Route path="/bitacora" element={<Bitacora />} />
               </Route>
             </Route>
           </Route>

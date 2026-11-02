@@ -1,5 +1,7 @@
 import type { Request, Response } from "express";
+import type { PoolClient } from "pg";
 import { pool } from "../db.js";
+import { registrarCambio, registrarCambioAparte } from "../servicios/bitacora.servicio.js";
 
 const SQL_CLIENTE = `
   SELECT c.id_cliente, c.tipo_cliente, c.estado, c.origen, c.observaciones, c.creado_en,
@@ -10,6 +12,11 @@ const SQL_CLIENTE = `
   LEFT JOIN clientes_individuales ci ON ci.id_cliente = c.id_cliente
   LEFT JOIN clientes_empresas ce ON ce.id_cliente = c.id_cliente
 `;
+
+async function leerCliente(cx: PoolClient, id: number) {
+  const resultado = await cx.query(`${SQL_CLIENTE} WHERE c.id_cliente = $1`, [id]);
+  return resultado.rows[0];
+}
 
 export async function listarClientes(_req: Request, res: Response) {
   try {
@@ -111,9 +118,16 @@ export async function crearCliente(req: Request, res: Response) {
       );
     }
 
+    const creado = await leerCliente(cliente, id);
+    await registrarCambio(cliente, {
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "clientes",
+      idRegistro: id,
+      accion: "CREAR",
+      despues: creado,
+    });
     await cliente.query("COMMIT");
-    const creado = await pool.query(`${SQL_CLIENTE} WHERE c.id_cliente = $1`, [id]);
-    res.status(201).json({ ok: true, cliente: creado.rows[0] });
+    res.status(201).json({ ok: true, cliente: creado });
   } catch (error) {
     await cliente.query("ROLLBACK");
     console.error(error);
@@ -135,6 +149,7 @@ export async function actualizarCliente(req: Request, res: Response) {
   const cliente = await pool.connect();
   try {
     await cliente.query("BEGIN");
+    const antes = await leerCliente(cliente, id);
     await cliente.query(
       `UPDATE clientes
        SET estado = COALESCE($2, estado), origen = COALESCE($3, origen), observaciones = COALESCE($4, observaciones)
@@ -168,9 +183,17 @@ export async function actualizarCliente(req: Request, res: Response) {
       );
     }
 
+    const actualizado = await leerCliente(cliente, id);
+    await registrarCambio(cliente, {
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "clientes",
+      idRegistro: id,
+      accion: "EDITAR",
+      antes,
+      despues: actualizado,
+    });
     await cliente.query("COMMIT");
-    const actualizado = await pool.query(`${SQL_CLIENTE} WHERE c.id_cliente = $1`, [id]);
-    res.json({ ok: true, cliente: actualizado.rows[0] });
+    res.json({ ok: true, cliente: actualizado });
   } catch (error) {
     await cliente.query("ROLLBACK");
     console.error(error);
@@ -183,13 +206,24 @@ export async function actualizarCliente(req: Request, res: Response) {
 export async function desactivarCliente(req: Request, res: Response) {
   try {
     const resultado = await pool.query(
-      `UPDATE clientes SET estado = 'INACTIVO' WHERE id_cliente = $1 RETURNING id_cliente`,
+      `UPDATE clientes c SET estado = 'INACTIVO'
+       FROM (SELECT estado FROM clientes WHERE id_cliente = $1) previo
+       WHERE c.id_cliente = $1
+       RETURNING c.id_cliente, previo.estado AS estado_anterior`,
       [req.params.id],
     );
     if (!resultado.rows[0]) {
       res.status(404).json({ ok: false, mensaje: "Cliente no encontrado" });
       return;
     }
+    await registrarCambioAparte({
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "clientes",
+      idRegistro: resultado.rows[0].id_cliente,
+      accion: "INACTIVAR",
+      antes: { estado: resultado.rows[0].estado_anterior },
+      despues: { estado: "INACTIVO" },
+    });
     res.json({ ok: true, mensaje: "Cliente inactivado" });
   } catch (error) {
     console.error(error);

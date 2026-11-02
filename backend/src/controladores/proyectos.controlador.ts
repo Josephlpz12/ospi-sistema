@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { pool } from "../db.js";
+import { registrarCambioAparte } from "../servicios/bitacora.servicio.js";
 
 const SQL_PROYECTO = `
   SELECT p.id_proyecto, p.id_cliente, p.id_estado, p.id_responsable, p.codigo, p.nombre,
@@ -20,6 +21,11 @@ async function idEstadoPorNombre(nombre: string) {
     [nombre],
   );
   return resultado.rows[0]?.id_estado as number | undefined;
+}
+
+async function leerProyecto(id: unknown) {
+  const resultado = await pool.query(`${SQL_PROYECTO} WHERE p.id_proyecto = $1`, [id]);
+  return resultado.rows[0];
 }
 
 export async function listarProyectos(_req: Request, res: Response) {
@@ -107,8 +113,15 @@ export async function crearProyecto(req: Request, res: Response) {
       ],
     );
 
-    const creado = await pool.query(`${SQL_PROYECTO} WHERE p.id_proyecto = $1`, [insertado.rows[0].id_proyecto]);
-    res.status(201).json({ ok: true, proyecto: creado.rows[0] });
+    const creado = await leerProyecto(insertado.rows[0].id_proyecto);
+    await registrarCambioAparte({
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "proyectos",
+      idRegistro: insertado.rows[0].id_proyecto,
+      accion: "CREAR",
+      despues: creado,
+    });
+    res.status(201).json({ ok: true, proyecto: creado });
   } catch (error) {
     console.error(error);
     res.status(500).json({ ok: false, mensaje: "Error al crear el proyecto" });
@@ -118,6 +131,7 @@ export async function crearProyecto(req: Request, res: Response) {
 export async function actualizarProyecto(req: Request, res: Response) {
   const id = Number(req.params.id);
   try {
+    const antes = await leerProyecto(id);
     const resultado = await pool.query(
       `UPDATE proyectos SET
          id_estado = COALESCE($2, id_estado),
@@ -150,8 +164,16 @@ export async function actualizarProyecto(req: Request, res: Response) {
       return;
     }
 
-    const actualizado = await pool.query(`${SQL_PROYECTO} WHERE p.id_proyecto = $1`, [id]);
-    res.json({ ok: true, proyecto: actualizado.rows[0] });
+    const actualizado = await leerProyecto(id);
+    await registrarCambioAparte({
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "proyectos",
+      idRegistro: id,
+      accion: "EDITAR",
+      antes,
+      despues: actualizado,
+    });
+    res.json({ ok: true, proyecto: actualizado });
   } catch (error) {
     console.error(error);
     res.status(500).json({ ok: false, mensaje: "Error al actualizar el proyecto" });
@@ -166,6 +188,7 @@ export async function cancelarProyecto(req: Request, res: Response) {
       return;
     }
 
+    const antes = await leerProyecto(req.params.id);
     const resultado = await pool.query(
       `UPDATE proyectos SET id_estado = $2 WHERE id_proyecto = $1 RETURNING id_proyecto`,
       [req.params.id, idCancelado],
@@ -174,6 +197,14 @@ export async function cancelarProyecto(req: Request, res: Response) {
       res.status(404).json({ ok: false, mensaje: "Proyecto no encontrado" });
       return;
     }
+    await registrarCambioAparte({
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "proyectos",
+      idRegistro: resultado.rows[0].id_proyecto,
+      accion: "CAMBIAR_ESTADO",
+      antes,
+      despues: await leerProyecto(req.params.id),
+    });
     res.json({ ok: true, mensaje: "Proyecto cancelado" });
   } catch (error) {
     console.error(error);

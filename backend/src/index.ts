@@ -13,6 +13,7 @@ import { productosRutas } from "./rutas/productos.rutas.js";
 import { finanzasRutas } from "./rutas/finanzas.rutas.js";
 import { monitoreoRutas } from "./rutas/monitoreo.rutas.js";
 import { usuariosRutas } from "./rutas/usuarios.rutas.js";
+import { bitacoraRutas } from "./rutas/bitacora.rutas.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 4000;
@@ -46,6 +47,7 @@ app.use("/api/documentos", documentosRutas);
 app.use("/api/productos", productosRutas);
 app.use("/api/monitoreo", monitoreoRutas);
 app.use("/api/usuarios", usuariosRutas);
+app.use("/api/bitacora", bitacoraRutas);
 app.use("/api", finanzasRutas);
 app.use("/api/proyectos", seguimientoRutas);
 app.use("/api/proyectos", proyectosRutas);

@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import type { PoolClient } from "pg";
 import { pool } from "../db.js";
 import { ROLES } from "../middleware/autorizar.js";
+import { registrarCambio, registrarCambioAparte } from "../servicios/bitacora.servicio.js";
 
 const SQL_USUARIO = `
   SELECT u.id_usuario, u.nombre_usuario, u.correo, u.id_rol, r.nombre AS nombre_rol, u.activo, u.creado_en
@@ -47,6 +48,11 @@ async function bloquearUsuario(cx: PoolClient, id: number) {
   return resultado.rows[0] as
     | { id_usuario: number; id_rol: number; activo: boolean; nombre_rol: string }
     | undefined;
+}
+
+async function leerUsuario(cx: PoolClient, id: number) {
+  const resultado = await cx.query(`${SQL_USUARIO} WHERE u.id_usuario = $1`, [id]);
+  return resultado.rows[0];
 }
 
 async function otrosAdministradoresActivos(cx: PoolClient, idExcluido: number) {
@@ -151,6 +157,14 @@ export async function crearUsuario(req: Request, res: Response) {
       [idRol, nombreUsuario, correo, hash],
     );
     const creado = await pool.query(`${SQL_USUARIO} WHERE u.id_usuario = $1`, [insertado.rows[0].id_usuario]);
+    await registrarCambioAparte({
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "usuarios",
+      idRegistro: insertado.rows[0].id_usuario,
+      accion: "CREAR",
+      despues: creado.rows[0],
+      nota: "Se definió una contraseña inicial",
+    });
     res.status(201).json({ ok: true, usuario: creado.rows[0] });
   } catch (error) {
     const duplicado = mensajeDuplicado(error);
@@ -215,7 +229,16 @@ export async function actualizarUsuario(req: Request, res: Response) {
       return;
     }
 
+    const antes = await leerUsuario(cx, id);
     await cx.query("UPDATE usuarios SET correo = $2, id_rol = $3 WHERE id_usuario = $1", [id, correo, idRol]);
+    await registrarCambio(cx, {
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "usuarios",
+      idRegistro: id,
+      accion: "EDITAR",
+      antes,
+      despues: await leerUsuario(cx, id),
+    });
     await cx.query("COMMIT");
     const actualizado = await pool.query(`${SQL_USUARIO} WHERE u.id_usuario = $1`, [id]);
     res.json({ ok: true, usuario: actualizado.rows[0] });
@@ -267,7 +290,16 @@ export async function cambiarEstadoUsuario(req: Request, res: Response) {
       }
     }
 
+    const antes = await leerUsuario(cx, id);
     await cx.query("UPDATE usuarios SET activo = $2 WHERE id_usuario = $1", [id, activo]);
+    await registrarCambio(cx, {
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "usuarios",
+      idRegistro: id,
+      accion: activo ? "ACTIVAR" : "INACTIVAR",
+      antes,
+      despues: await leerUsuario(cx, id),
+    });
     await cx.query("COMMIT");
     const actualizado = await pool.query(`${SQL_USUARIO} WHERE u.id_usuario = $1`, [id]);
     res.json({ ok: true, usuario: actualizado.rows[0] });
@@ -303,6 +335,13 @@ export async function restablecerClave(req: Request, res: Response) {
       res.status(404).json({ ok: false, mensaje: "Usuario no encontrado" });
       return;
     }
+    await registrarCambioAparte({
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "usuarios",
+      idRegistro: id,
+      accion: "RESTABLECER_CLAVE",
+      nota: "Se restableció la contraseña",
+    });
     res.json({ ok: true, mensaje: "Contraseña restablecida" });
   } catch (error) {
     console.error(error);
