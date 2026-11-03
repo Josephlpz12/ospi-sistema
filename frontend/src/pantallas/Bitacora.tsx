@@ -16,6 +16,8 @@ const TIPOS_REGISTRO: Record<string, string> = {
   usuarios: "Usuario",
   asignaciones: "Asignación",
   comentarios: "Comentario",
+  contactos_cliente: "Contacto",
+  direcciones: "Dirección",
 };
 
 const ACCIONES: Record<string, string> = {

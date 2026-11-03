@@ -2,6 +2,8 @@ import { type FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { esAdministrador, puedeOperarFinanzas } from "../autorizacion";
 import { ListaDocumentos } from "../componentes/ListaDocumentos";
+import { SeccionContactos } from "../componentes/SeccionContactos";
+import { SeccionDirecciones } from "../componentes/SeccionDirecciones";
 import { useAuth } from "../contexto/AuthContexto";
 import { obtenerFichaCliente } from "../servicios/clientes.servicio";
 import { crearSuscripcion, listarProductos } from "../servicios/finanzas.servicio";
@@ -173,6 +175,9 @@ export function ClienteFicha() {
           </tbody>
         </table>
       )}
+
+      <SeccionContactos idCliente={cliente.id_cliente} puedeEditar={admin} />
+      <SeccionDirecciones idCliente={cliente.id_cliente} puedeEditar={admin} />
 
       <div style={{ marginTop: 20 }}>
         <ListaDocumentos id_cliente={cliente.id_cliente} />

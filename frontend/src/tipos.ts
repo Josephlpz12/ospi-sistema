@@ -247,3 +247,27 @@ export type ProyectoMonitoreo = {
   nombre_cliente: string | null;
   nombre_responsable: string | null;
 };
+
+export type Contacto = {
+  id_contacto: number;
+  id_cliente: number;
+  nombres: string;
+  apellidos: string;
+  cargo: string | null;
+  telefono: string | null;
+  correo: string | null;
+  es_principal: boolean;
+  nombre_cliente: string | null;
+};
+
+export type TipoDireccion = "FISCAL" | "ENTREGA" | "OTRA";
+
+export type Direccion = {
+  id_direccion: number;
+  id_cliente: number;
+  tipo: TipoDireccion;
+  departamento_gt: string | null;
+  municipio: string | null;
+  detalle: string;
+  nombre_cliente: string | null;
+};

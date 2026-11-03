@@ -14,6 +14,8 @@ export const TABLAS_BITACORA = [
   "suscripciones",
   "asignaciones",
   "comentarios",
+  "contactos_cliente",
+  "direcciones",
 ] as const;
 
 export type TablaBitacora = (typeof TABLAS_BITACORA)[number];
@@ -107,6 +109,8 @@ const CAMPOS_POR_TABLA: Record<TablaBitacora, string[]> = {
   usuarios: ["nombre_usuario", "correo", "nombre_rol", "activo"],
   asignaciones: ["nombre_empleado", "rol_en_proyecto", "nombre_proyecto", "titulo_tarea", "fecha_asignacion"],
   comentarios: ["nombre_proyecto", "titulo_tarea", "texto"],
+  contactos_cliente: ["nombre_cliente", "nombres", "apellidos", "cargo", "telefono", "correo", "es_principal"],
+  direcciones: ["nombre_cliente", "tipo", "departamento_gt", "municipio", "detalle"],
 };
 
 const ETIQUETAS: Record<string, string> = {
@@ -169,9 +173,16 @@ const ETIQUETAS: Record<string, string> = {
   titulo_tarea: "Tarea",
   fecha_asignacion: "Fecha de asignación",
   texto: "Comentario",
+  cargo: "Cargo",
+  telefono: "Teléfono",
+  es_principal: "Principal",
+  tipo: "Tipo de dirección",
+  departamento_gt: "Departamento",
+  municipio: "Municipio",
+  detalle: "Detalle",
 };
 
-const CAMPOS_CODIGO = new Set(["estado", "tipo_cliente"]);
+const CAMPOS_CODIGO = new Set(["estado", "tipo_cliente", "tipo"]);
 
 const COLUMNAS_ID = {
   clientes: "id_cliente",

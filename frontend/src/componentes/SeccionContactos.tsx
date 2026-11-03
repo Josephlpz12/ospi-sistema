@@ -1,0 +1,178 @@
+import { type FormEvent, useEffect, useState } from "react";
+import { eliminarContacto, guardarContacto, listarContactos } from "../servicios/clientes.servicio";
+import type { Contacto } from "../tipos";
+
+type Props = {
+  idCliente: number;
+  puedeEditar: boolean;
+};
+
+const FORMULARIO_VACIO = { nombres: "", apellidos: "", cargo: "", telefono: "", correo: "", es_principal: false };
+
+export function SeccionContactos({ idCliente, puedeEditar }: Props) {
+  const [contactos, setContactos] = useState<Contacto[]>([]);
+  const [error, setError] = useState("");
+  const [formulario, setFormulario] = useState(FORMULARIO_VACIO);
+  const [idEditando, setIdEditando] = useState<number | null>(null);
+
+  async function cargar() {
+    setContactos(await listarContactos(idCliente));
+  }
+
+  useEffect(() => {
+    setIdEditando(null);
+    setFormulario(FORMULARIO_VACIO);
+    cargar().catch((err: Error) => setError(err.message));
+  }, [idCliente]);
+
+  function cambiar(campo: keyof typeof FORMULARIO_VACIO, valor: string | boolean) {
+    setFormulario((previo) => ({ ...previo, [campo]: valor }));
+  }
+
+  function editar(c: Contacto) {
+    setError("");
+    setIdEditando(c.id_contacto);
+    setFormulario({
+      nombres: c.nombres,
+      apellidos: c.apellidos,
+      cargo: c.cargo ?? "",
+      telefono: c.telefono ?? "",
+      correo: c.correo ?? "",
+      es_principal: c.es_principal,
+    });
+  }
+
+  function cancelar() {
+    setIdEditando(null);
+    setFormulario(FORMULARIO_VACIO);
+  }
+
+  async function guardar(e: FormEvent) {
+    e.preventDefault();
+    setError("");
+    try {
+      await guardarContacto(idCliente, formulario, idEditando ?? undefined);
+      cancelar();
+      await cargar();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo guardar el contacto");
+    }
+  }
+
+  async function eliminar(c: Contacto) {
+    if (!confirm(`¿Eliminar el contacto ${c.nombres} ${c.apellidos}?`)) return;
+    setError("");
+    try {
+      await eliminarContacto(idCliente, c.id_contacto);
+      if (idEditando === c.id_contacto) cancelar();
+      await cargar();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo eliminar el contacto");
+    }
+  }
+
+  return (
+    <details className="card seccion-plegable">
+      <summary>Contactos ({contactos.length})</summary>
+      {error ? <p className="alerta">{error}</p> : null}
+      {puedeEditar ? (
+        <form className="form-inline" onSubmit={(e) => void guardar(e)}>
+          <input
+            placeholder="Nombres"
+            aria-label="Nombres"
+            value={formulario.nombres}
+            maxLength={100}
+            onChange={(ev) => cambiar("nombres", ev.target.value)}
+            required
+          />
+          <input
+            placeholder="Apellidos"
+            aria-label="Apellidos"
+            value={formulario.apellidos}
+            maxLength={100}
+            onChange={(ev) => cambiar("apellidos", ev.target.value)}
+            required
+          />
+          <input
+            placeholder="Cargo (opcional)"
+            aria-label="Cargo"
+            value={formulario.cargo}
+            maxLength={80}
+            onChange={(ev) => cambiar("cargo", ev.target.value)}
+          />
+          <input
+            type="tel"
+            placeholder="Teléfono (opcional)"
+            aria-label="Teléfono"
+            value={formulario.telefono}
+            maxLength={30}
+            onChange={(ev) => cambiar("telefono", ev.target.value)}
+          />
+          <input
+            type="email"
+            placeholder="Correo (opcional)"
+            aria-label="Correo"
+            value={formulario.correo}
+            maxLength={150}
+            onChange={(ev) => cambiar("correo", ev.target.value)}
+          />
+          <label className="opcion-casilla">
+            <input
+              type="checkbox"
+              checked={formulario.es_principal}
+              onChange={(ev) => cambiar("es_principal", ev.target.checked)}
+            />
+            Contacto principal
+          </label>
+          <button className="btn" type="submit">
+            {idEditando ? "Guardar cambios" : "Agregar contacto"}
+          </button>
+          {idEditando ? (
+            <button className="btn-text" type="button" onClick={cancelar}>
+              Cancelar
+            </button>
+          ) : null}
+        </form>
+      ) : null}
+      {contactos.length === 0 ? (
+        <p>Este cliente no tiene contactos.</p>
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Cargo</th>
+              <th>Teléfono</th>
+              <th>Correo</th>
+              <th>Principal</th>
+              {puedeEditar ? <th></th> : null}
+            </tr>
+          </thead>
+          <tbody>
+            {contactos.map((c) => (
+              <tr key={c.id_contacto}>
+                <td>
+                  {c.nombres} {c.apellidos}
+                </td>
+                <td>{c.cargo ?? "—"}</td>
+                <td>{c.telefono ?? "—"}</td>
+                <td>{c.correo ?? "—"}</td>
+                <td>{c.es_principal ? "Sí" : "No"}</td>
+                {puedeEditar ? (
+                  <td className="acciones">
+                    <button type="button" className="btn-text" onClick={() => editar(c)}>
+                      Editar
+                    </button>
+                    <button type="button" className="btn-text" onClick={() => void eliminar(c)}>
+                      Eliminar
+                    </button>
+                  </td>
+                ) : null}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </details>
+  );
+}

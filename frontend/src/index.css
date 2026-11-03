@@ -605,6 +605,15 @@ small {
   margin-top: 20px;
 }
 
+.form-inline .opcion-casilla input {
+  flex: none;
+  min-width: 0;
+}
+
+.form-inline .opcion-casilla {
+  flex: none;
+}
+
 .seccion-plegable summary {
   cursor: pointer;
   font-family: Poppins, Inter, sans-serif;
