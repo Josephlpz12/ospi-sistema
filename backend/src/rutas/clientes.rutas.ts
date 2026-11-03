@@ -4,6 +4,7 @@ import { ROLES, autorizar, todosLosRoles } from "../middleware/autorizar.js";
 import {
   actualizarCliente,
   crearCliente,
+  activarCliente,
   desactivarCliente,
   listarClientes,
   obtenerCliente,
@@ -39,4 +40,5 @@ clientesRutas.delete("/:id/direcciones/:idDireccion", autorizar(ROLES.admin), el
 clientesRutas.get("/:id", autorizar(...todosLosRoles), obtenerCliente);
 clientesRutas.post("/", autorizar(ROLES.admin), crearCliente);
 clientesRutas.put("/:id", autorizar(ROLES.admin), actualizarCliente);
+clientesRutas.post("/:id/activar", autorizar(ROLES.admin), activarCliente);
 clientesRutas.delete("/:id", autorizar(ROLES.admin), desactivarCliente);

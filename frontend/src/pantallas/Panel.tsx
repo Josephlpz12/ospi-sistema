@@ -2,20 +2,13 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Ban, Bell, CalendarClock, CircleCheck, FolderKanban, Receipt, TrendingDown, Users } from "lucide-react";
 import { esAdministrador } from "../autorizacion";
+import { InsigniaEstado } from "../componentes/InsigniaEstado";
 import { useAuth } from "../contexto/AuthContexto";
 import { useToast } from "../contexto/ToastContexto";
 import { listarClientes } from "../servicios/clientes.servicio";
 import { listarProyectos } from "../servicios/proyectos.servicio";
 import { generarAlertas, listarAlertas } from "../servicios/alertas.servicio";
 import type { Alerta, Proyecto } from "../tipos";
-
-const insignias: Record<string, string> = {
-  Activo: "insignia insignia-activo",
-  Cancelado: "insignia insignia-cancelado",
-  Pausado: "insignia insignia-pausado",
-  Cotización: "insignia insignia-cotizacion",
-  Entregado: "insignia insignia-entregado",
-};
 
 const iconosAlerta = {
   TAREA_VENCIDA: CalendarClock,
@@ -115,9 +108,9 @@ export function Panel() {
                 </td>
                 <td>{p.nombre_cliente}</td>
                 <td>
-                  <span className={insignias[p.estado] ?? "insignia"}>{p.estado}</span>
+                  <InsigniaEstado estado={p.estado} />
                 </td>
-                <td>{Number(p.porcentaje_avance)}%</td>
+                <td className="dato-fuerte">{Number(p.porcentaje_avance)}%</td>
               </tr>
             ))}
           </tbody>
@@ -180,7 +173,7 @@ export function Panel() {
                     <Link to={`/proyectos/${p.id_proyecto}/seguimiento`}>{p.nombre}</Link>
                   </td>
                   <td>{p.fecha_fin_plan ? String(p.fecha_fin_plan).slice(0, 10) : "—"}</td>
-                  <td>{Number(p.porcentaje_avance)}%</td>
+                  <td className="dato-fuerte">{Number(p.porcentaje_avance)}%</td>
                 </tr>
               ))}
             </tbody>

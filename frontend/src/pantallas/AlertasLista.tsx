@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { InsigniaEstado } from "../componentes/InsigniaEstado";
 import { useToast } from "../contexto/ToastContexto";
 import { generarAlertas, listarAlertas, marcarAlertaLeida } from "../servicios/alertas.servicio";
 import type { Alerta } from "../tipos";
@@ -64,12 +65,14 @@ export function AlertasLista() {
                   "—"
                 )}
               </td>
-              <td>{a.leida ? "Leída" : "Nueva"}</td>
+              <td>
+                <InsigniaEstado estado={a.leida ? "Leída" : "Nueva"} />
+              </td>
               <td>
                 {!a.leida ? (
                   <button
                     type="button"
-                    className="btn-text"
+                    className="btn btn-secundario btn-compacto"
                     onClick={() =>
                       void marcarAlertaLeida(a.id_alerta)
                         .then(() => {

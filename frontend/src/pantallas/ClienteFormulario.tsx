@@ -161,7 +161,9 @@ export function ClienteFormulario() {
           <button className="btn" type="submit" disabled={cargando}>
             Guardar
           </button>
-          <Link to="/clientes">Cancelar</Link>
+          <Link className="btn btn-secundario" to="/clientes">
+            Cancelar
+          </Link>
         </div>
       </form>
     </section>

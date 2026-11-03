@@ -180,6 +180,43 @@ export async function actualizarProyecto(req: Request, res: Response) {
   }
 }
 
+export async function activarProyecto(req: Request, res: Response) {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) {
+    res.status(404).json({ ok: false, mensaje: "Proyecto no encontrado" });
+    return;
+  }
+  try {
+    const idActivo = await idEstadoPorNombre("Activo");
+    if (!idActivo) {
+      res.status(500).json({ ok: false, mensaje: "No existe el estado Activo" });
+      return;
+    }
+    const antes = await leerProyecto(id);
+    if (!antes) {
+      res.status(404).json({ ok: false, mensaje: "Proyecto no encontrado" });
+      return;
+    }
+    if (antes.estado !== "Cancelado") {
+      res.status(400).json({ ok: false, mensaje: "Solo se puede activar un proyecto cancelado" });
+      return;
+    }
+    await pool.query("UPDATE proyectos SET id_estado = $2 WHERE id_proyecto = $1", [id, idActivo]);
+    await registrarCambioAparte({
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "proyectos",
+      idRegistro: id,
+      accion: "ACTIVAR",
+      antes,
+      despues: await leerProyecto(id),
+    });
+    res.json({ ok: true, mensaje: "Proyecto activado" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ ok: false, mensaje: "Error al activar el proyecto" });
+  }
+}
+
 export async function cancelarProyecto(req: Request, res: Response) {
   try {
     const idCancelado = await idEstadoPorNombre("Cancelado");

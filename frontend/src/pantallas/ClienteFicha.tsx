@@ -1,12 +1,14 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { esAdministrador, puedeOperarFinanzas } from "../autorizacion";
+import { InsigniaEstado } from "../componentes/InsigniaEstado";
 import { ListaDocumentos } from "../componentes/ListaDocumentos";
 import { SeccionContactos } from "../componentes/SeccionContactos";
 import { SeccionDirecciones } from "../componentes/SeccionDirecciones";
+import { useConfirmar } from "../contexto/ConfirmacionContexto";
 import { useAuth } from "../contexto/AuthContexto";
 import { useToast } from "../contexto/ToastContexto";
-import { obtenerFichaCliente } from "../servicios/clientes.servicio";
+import { activarCliente, obtenerFichaCliente } from "../servicios/clientes.servicio";
 import { crearSuscripcion, listarProductos } from "../servicios/finanzas.servicio";
 import type { Cliente, Producto, Proyecto, Suscripcion } from "../tipos";
 
@@ -21,6 +23,7 @@ function fecha(valor: string | null) {
 
 export function ClienteFicha() {
   const { usuario } = useAuth();
+  const confirmar = useConfirmar();
   const toast = useToast();
   const admin = esAdministrador(usuario?.nombre_rol);
   const finanzas = puedeOperarFinanzas(usuario?.nombre_rol);
@@ -47,6 +50,22 @@ export function ClienteFicha() {
       .then(setProductos)
       .catch((err: Error) => toast.error(err.message));
   }, [id, admin]);
+
+  async function activar() {
+    if (!cliente) return;
+    const aceptado = await confirmar({
+      titulo: "Activar cliente",
+      mensaje: "¿Activar este cliente?",
+    });
+    if (!aceptado) return;
+    try {
+      await activarCliente(cliente.id_cliente);
+      toast.exito("Cliente activado");
+      await cargar();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo activar");
+    }
+  }
 
   async function altaSuscripcion(e: FormEvent) {
     e.preventDefault();
@@ -79,20 +98,34 @@ export function ClienteFicha() {
       </p>
       <div className="page-head">
         <h1>{nombreVisible(cliente)}</h1>
-        {admin ? (
-          <Link className="btn" to={`/clientes/${cliente.id_cliente}/editar`}>
-            Editar
-          </Link>
-        ) : null}
+        <div className="acciones">
+          {admin && cliente.estado === "INACTIVO" ? (
+            <button type="button" className="btn btn-positivo" onClick={() => void activar()}>
+              Activar
+            </button>
+          ) : null}
+          {admin ? (
+            <Link className="btn btn-editar" to={`/clientes/${cliente.id_cliente}/editar`}>
+              Editar
+            </Link>
+          ) : null}
+        </div>
       </div>
       {cliente.estado === "SUSPENDIDO" ? (
         <p className="aviso-suspendido">Servicio suspendido por mora. Regularice facturas y multas, luego reactive el contrato.</p>
       ) : null}
-      <p className="muted-line">
-        {cliente.tipo_cliente === "EMPRESA" ? "Empresa" : "Individual"} · {cliente.estado}
-      </p>
+      <div className="resumen-ficha">
+        <div>
+          <span className="dato-etiqueta">Estado</span>
+          <InsigniaEstado estado={cliente.estado} />
+        </div>
+        <div>
+          <span className="dato-etiqueta">Tipo</span>
+          <span>{cliente.tipo_cliente === "EMPRESA" ? "Empresa" : "Individual"}</span>
+        </div>
+      </div>
       {finanzas ? (
-        <p>
+        <p className="dato-secundario">
           <Link to={`/contratos?id_cliente=${cliente.id_cliente}`}>Ver contratos de este cliente</Link>
         </p>
       ) : null}
@@ -116,7 +149,9 @@ export function ClienteFicha() {
                 <td>{s.nombre_producto}</td>
                 <td>{fecha(s.fecha_inicio)}</td>
                 <td>{fecha(s.fecha_fin)}</td>
-                <td>{s.estado}</td>
+                <td>
+                  <InsigniaEstado estado={s.estado} />
+                </td>
               </tr>
             ))}
           </tbody>
@@ -166,10 +201,14 @@ export function ClienteFicha() {
               <tr key={p.id_proyecto}>
                 <td>{p.codigo}</td>
                 <td>{p.nombre}</td>
-                <td>{p.estado}</td>
-                <td>{Number(p.porcentaje_avance)}%</td>
+                <td>
+                  <InsigniaEstado estado={p.estado} />
+                </td>
+                <td className="dato-fuerte">{Number(p.porcentaje_avance)}%</td>
                 <td className="acciones">
-                  <Link to={`/proyectos/${p.id_proyecto}/seguimiento`}>Seguimiento</Link>
+                  <Link className="btn btn-secundario btn-compacto" to={`/proyectos/${p.id_proyecto}/seguimiento`}>
+                    Seguimiento
+                  </Link>
                 </td>
               </tr>
             ))}

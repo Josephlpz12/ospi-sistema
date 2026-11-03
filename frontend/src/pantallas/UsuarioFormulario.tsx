@@ -187,7 +187,9 @@ export function UsuarioFormulario() {
           <button className="btn" type="submit" disabled={cargando}>
             Guardar
           </button>
-          <Link to="/usuarios">Cancelar</Link>
+          <Link className="btn btn-secundario" to="/usuarios">
+            Cancelar
+          </Link>
         </div>
       </form>
       {editando ? (

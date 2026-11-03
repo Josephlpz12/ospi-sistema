@@ -63,7 +63,7 @@ export function ListaDocumentos({ id_cliente, id_proyecto }: Props) {
       {admin ? (
         <form className="form-inline" onSubmit={(ev) => void enviar(ev)}>
           <input type="file" onChange={(ev) => setArchivo(ev.target.files?.[0] ?? null)} required />
-          <button className="btn" type="submit">
+          <button className="btn btn-secundario" type="submit">
             Subir
           </button>
         </form>
@@ -89,7 +89,7 @@ export function ListaDocumentos({ id_cliente, id_proyecto }: Props) {
                 <td>
                   <button
                     type="button"
-                    className="btn-text"
+                    className="btn btn-peligro btn-compacto"
                     onClick={() => void quitar(d.id_documento)}
                   >
                     Quitar

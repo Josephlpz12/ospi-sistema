@@ -23,3 +23,7 @@ export async function guardarProyecto(cuerpo: Record<string, unknown>, id?: numb
 export async function cancelarProyecto(id: number) {
   await api(`/proyectos/${id}`, { method: "DELETE" });
 }
+
+export async function activarProyecto(id: number) {
+  await api(`/proyectos/${id}/activar`, { method: "POST" });
+}

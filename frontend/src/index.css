@@ -495,6 +495,64 @@ textarea {
   color: var(--muted);
 }
 
+.insignia-exito {
+  background: #e5f6ec;
+  color: #146c3a;
+}
+
+.insignia-peligro {
+  background: #fdecea;
+  color: #8f1d14;
+}
+
+.insignia-pendiente {
+  background: #fff6d8;
+  color: #7a5b00;
+}
+
+.insignia-inactivo {
+  background: #eef1f4;
+  color: #3d4456;
+}
+
+.insignia-info {
+  background: #e8ecff;
+  color: var(--azul-marca);
+}
+
+.resumen-ficha {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 28px;
+  align-items: flex-end;
+  margin: 4px 0 20px;
+}
+
+.dato-etiqueta {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.dato-clave {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text);
+}
+
+.dato-fuerte {
+  font-weight: 700;
+}
+
+.dato-secundario {
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 400;
+}
+
 .alerta-mensaje {
   display: inline-flex;
   align-items: center;
@@ -530,7 +588,9 @@ tbody tr:last-child td {
 
 .acciones {
   display: flex;
-  gap: 12px;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .form-actions {
@@ -676,6 +736,31 @@ small {
 
 .btn-peligro:hover {
   background: #9b1c13;
+}
+
+.btn-positivo {
+  background: #146c3a;
+  color: #fff;
+}
+
+.btn-positivo:hover {
+  background: #115c32;
+}
+
+.btn-compacto {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.btn-editar {
+  background: var(--tarjeta);
+  color: var(--azul-marca);
+  border: 1px solid var(--azul-marca);
+}
+
+.btn-editar:hover {
+  background: color-mix(in srgb, var(--azul-marca) 10%, var(--tarjeta));
 }
 
 .toasts {

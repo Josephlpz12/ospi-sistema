@@ -163,7 +163,9 @@ export function ContratoFormulario() {
           <button className="btn" type="submit" disabled={cargando}>
             Guardar
           </button>
-          <Link to="/contratos">Cancelar</Link>
+          <Link className="btn btn-secundario" to="/contratos">
+            Cancelar
+          </Link>
         </div>
       </form>
     </section>

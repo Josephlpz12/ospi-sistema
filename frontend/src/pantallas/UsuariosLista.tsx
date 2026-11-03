@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { InsigniaEstado } from "../componentes/InsigniaEstado";
 import { useConfirmar } from "../contexto/ConfirmacionContexto";
 import { useAuth } from "../contexto/AuthContexto";
 import { useToast } from "../contexto/ToastContexto";
@@ -66,14 +67,18 @@ export function UsuariosLista() {
               <td>{u.correo}</td>
               <td>{u.nombre_rol}</td>
               <td>
-                <span className={u.activo ? "insignia insignia-activo" : "insignia insignia-cancelado"}>
-                  {u.activo ? "Activo" : "Inactivo"}
-                </span>
+                <InsigniaEstado estado={u.activo ? "Activo" : "Inactivo"} />
               </td>
               <td className="acciones">
-                <Link to={`/usuarios/${u.id_usuario}/editar`}>Editar</Link>
+                <Link className="btn btn-editar btn-compacto" to={`/usuarios/${u.id_usuario}/editar`}>
+                  Editar
+                </Link>
                 {u.id_usuario !== usuario?.id_usuario ? (
-                  <button type="button" className="btn-text" onClick={() => void cambiarEstado(u)}>
+                  <button
+                    type="button"
+                    className={u.activo ? "btn btn-peligro btn-compacto" : "btn btn-positivo btn-compacto"}
+                    onClick={() => void cambiarEstado(u)}
+                  >
                     {u.activo ? "Inactivar" : "Activar"}
                   </button>
                 ) : null}

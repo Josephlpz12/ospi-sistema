@@ -4,7 +4,7 @@ import { esAdministrador, puedeActualizarSeguimiento } from "../autorizacion";
 import { useConfirmar } from "../contexto/ConfirmacionContexto";
 import { useAuth } from "../contexto/AuthContexto";
 import { useToast } from "../contexto/ToastContexto";
-import { obtenerProyecto } from "../servicios/proyectos.servicio";
+import { activarProyecto, obtenerProyecto } from "../servicios/proyectos.servicio";
 import {
   actualizarFase,
   actualizarTarea,
@@ -18,18 +18,11 @@ import {
   listarTareas,
   registrarAvance,
 } from "../servicios/seguimiento.servicio";
+import { InsigniaEstado } from "../componentes/InsigniaEstado";
 import { ListaDocumentos } from "../componentes/ListaDocumentos";
 import { SeccionAsignaciones } from "../componentes/SeccionAsignaciones";
 import { SeccionComentarios } from "../componentes/SeccionComentarios";
 import type { Avance, Empleado, Fase, Proyecto, Tarea } from "../tipos";
-
-function etiquetaEstado(estado: string) {
-  if (estado === "PENDIENTE") return "Pendiente";
-  if (estado === "EN_CURSO") return "En curso";
-  if (estado === "COMPLETADA") return "Completada";
-  if (estado === "BLOQUEADA") return "Bloqueada";
-  return estado;
-}
 
 export function ProyectoSeguimiento() {
   const { usuario } = useAuth();
@@ -147,6 +140,22 @@ export function ProyectoSeguimiento() {
     }
   }
 
+  async function activar() {
+    if (!proyecto) return;
+    const aceptado = await confirmar({
+      titulo: "Activar proyecto",
+      mensaje: "¿Activar este proyecto? Volverá al estado Activo.",
+    });
+    if (!aceptado) return;
+    try {
+      await activarProyecto(proyecto.id_proyecto);
+      toast.exito("Proyecto activado");
+      await cargar();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo activar");
+    }
+  }
+
   if (!proyecto) {
     return (
       <section>
@@ -160,22 +169,45 @@ export function ProyectoSeguimiento() {
       <p>
         <Link to="/proyectos">← Proyectos</Link>
       </p>
-      <h1>Seguimiento</h1>
-      <p className="muted-line">
-        {proyecto.codigo} · {proyecto.nombre} ·{" "}
-        <Link to={`/clientes/${proyecto.id_cliente}`}>{proyecto.nombre_cliente}</Link> · {Number(proyecto.porcentaje_avance)}%
-        {proyecto.resumen
-          ? ` · ${proyecto.resumen.fases} fases · ${proyecto.resumen.tareas_abiertas} tareas abiertas`
-          : ""}
-      </p>
+      <div className="page-head">
+        <h1>{proyecto.nombre}</h1>
+        {admin && proyecto.estado === "Cancelado" ? (
+          <button type="button" className="btn btn-positivo" onClick={() => void activar()}>
+            Activar
+          </button>
+        ) : null}
+      </div>
+      <div className="resumen-ficha">
+        <div>
+          <span className="dato-etiqueta">Estado</span>
+          <InsigniaEstado estado={proyecto.estado} />
+        </div>
+        <div>
+          <span className="dato-etiqueta">Avance</span>
+          <span className="dato-clave">{Number(proyecto.porcentaje_avance)}%</span>
+        </div>
+        <div>
+          <span className="dato-etiqueta">Cliente</span>
+          <Link to={`/clientes/${proyecto.id_cliente}`}>{proyecto.nombre_cliente}</Link>
+        </div>
+        <div>
+          <span className="dato-etiqueta">Código</span>
+          <span>{proyecto.codigo}</span>
+        </div>
+      </div>
+      {proyecto.resumen ? (
+        <p className="dato-secundario">
+          {proyecto.resumen.fases} fases · {proyecto.resumen.tareas_abiertas} tareas abiertas
+        </p>
+      ) : null}
       <div className="seguimiento-grid">
         <article className="card">
           <h2>Fases</h2>
           {admin ? (
             <form className="form-inline" onSubmit={(e) => void altaFase(e)}>
               <input value={nombreFase} onChange={(ev) => setNombreFase(ev.target.value)} placeholder="Nueva fase" required />
-              <button className="btn" type="submit">
-                Agregar
+              <button className="btn btn-secundario" type="submit">
+                Agregar fase
               </button>
             </form>
           ) : null}
@@ -192,31 +224,32 @@ export function ProyectoSeguimiento() {
                 <tr key={f.id_fase}>
                   <td>{f.nombre}</td>
                   <td>
-                    {puedeEstado ? (
-                      <select
-                        value={f.estado}
-                        onChange={(ev) => {
-                          void actualizarFase(idProyecto, f.id_fase, { estado: ev.target.value })
-                            .then(() => {
-                              toast.exito("Estado de la fase actualizado");
-                              return cargar();
-                            })
-                            .catch((err: Error) => toast.error(err.message));
-                        }}
-                      >
-                        <option value="PENDIENTE">Pendiente</option>
-                        <option value="EN_CURSO">En curso</option>
-                        <option value="COMPLETADA">Completada</option>
-                      </select>
-                    ) : (
-                      etiquetaEstado(f.estado)
-                    )}
+                    <div className="acciones">
+                      <InsigniaEstado estado={f.estado} />
+                      {puedeEstado ? (
+                        <select
+                          value={f.estado}
+                          onChange={(ev) => {
+                            void actualizarFase(idProyecto, f.id_fase, { estado: ev.target.value })
+                              .then(() => {
+                                toast.exito("Estado de la fase actualizado");
+                                return cargar();
+                              })
+                              .catch((err: Error) => toast.error(err.message));
+                          }}
+                        >
+                          <option value="PENDIENTE">Pendiente</option>
+                          <option value="EN_CURSO">En curso</option>
+                          <option value="COMPLETADA">Completada</option>
+                        </select>
+                      ) : null}
+                    </div>
                   </td>
                   {admin ? (
                     <td>
                       <button
                         type="button"
-                        className="btn-text"
+                        className="btn btn-peligro btn-compacto"
                         onClick={() => void quitarFase(f.id_fase)}
                       >
                         Quitar
@@ -251,7 +284,7 @@ export function ProyectoSeguimiento() {
               ))}
             </select>
             <input type="date" value={fechaLimite} onChange={(ev) => setFechaLimite(ev.target.value)} />
-            <button className="btn" type="submit">
+            <button className="btn btn-secundario" type="submit">
               Agregar tarea
             </button>
           </form>
@@ -278,32 +311,33 @@ export function ProyectoSeguimiento() {
                   </td>
                   <td>{t.nombre_fase ?? "—"}</td>
                   <td>
-                    {puedeEstado ? (
-                      <select
-                        value={t.estado}
-                        onChange={(ev) => {
-                          void actualizarTarea(idProyecto, t.id_tarea, { estado: ev.target.value })
-                            .then(() => {
-                              toast.exito("Estado de la tarea actualizado");
-                              return cargar();
-                            })
-                            .catch((err: Error) => toast.error(err.message));
-                        }}
-                      >
-                        <option value="PENDIENTE">Pendiente</option>
-                        <option value="EN_CURSO">En curso</option>
-                        <option value="COMPLETADA">Completada</option>
-                        <option value="BLOQUEADA">Bloqueada</option>
-                      </select>
-                    ) : (
-                      etiquetaEstado(t.estado)
-                    )}
+                    <div className="acciones">
+                      <InsigniaEstado estado={t.estado} />
+                      {puedeEstado ? (
+                        <select
+                          value={t.estado}
+                          onChange={(ev) => {
+                            void actualizarTarea(idProyecto, t.id_tarea, { estado: ev.target.value })
+                              .then(() => {
+                                toast.exito("Estado de la tarea actualizado");
+                                return cargar();
+                              })
+                              .catch((err: Error) => toast.error(err.message));
+                          }}
+                        >
+                          <option value="PENDIENTE">Pendiente</option>
+                          <option value="EN_CURSO">En curso</option>
+                          <option value="COMPLETADA">Completada</option>
+                          <option value="BLOQUEADA">Bloqueada</option>
+                        </select>
+                      ) : null}
+                    </div>
                   </td>
                   {admin ? (
                     <td>
                       <button
                         type="button"
-                        className="btn-text"
+                        className="btn btn-peligro btn-compacto"
                         onClick={() => void quitarTarea(t.id_tarea)}
                       >
                         Quitar
@@ -331,7 +365,7 @@ export function ProyectoSeguimiento() {
           />
           <input value={comentario} onChange={(ev) => setComentario(ev.target.value)} placeholder="Comentario" />
           <button className="btn" type="submit">
-            Registrar %
+            Registrar avance
           </button>
         </form>
         ) : null}

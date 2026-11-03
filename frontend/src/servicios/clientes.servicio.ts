@@ -26,6 +26,10 @@ export async function inactivarCliente(id: number) {
   await api(`/clientes/${id}`, { method: "DELETE" });
 }
 
+export async function activarCliente(id: number) {
+  await api(`/clientes/${id}/activar`, { method: "POST" });
+}
+
 export async function listarContactos(idCliente: number) {
   const datos = await api<{ contactos: Contacto[] }>(`/clientes/${idCliente}/contactos`);
   return datos.contactos;

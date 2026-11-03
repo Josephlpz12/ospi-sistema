@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { InsigniaEstado } from "../componentes/InsigniaEstado";
 import { useConfirmar } from "../contexto/ConfirmacionContexto";
 import { useToast } from "../contexto/ToastContexto";
 import {
@@ -136,11 +137,11 @@ export function ContratoFicha() {
       <div className="page-head">
         <h1>{contrato.numero}</h1>
         <div className="acciones">
-          <button type="button" className="btn-text" onClick={() => void revisar()}>
+          <button type="button" className="btn btn-secundario" onClick={() => void revisar()}>
             Revisar vencidas
           </button>
           {contrato.estado === "INCUMPLIDO" ? (
-            <button type="button" className="btn" onClick={() => void reactivar()}>
+            <button type="button" className="btn btn-positivo" onClick={() => void reactivar()}>
               Reactivar servicio
             </button>
           ) : null}
@@ -149,12 +150,37 @@ export function ContratoFicha() {
       {contrato.estado === "INCUMPLIDO" ? (
         <p className="aviso-suspendido">Contrato incumplido. El servicio queda suspendido hasta pagar y reactivar.</p>
       ) : null}
-      <p className="muted-line">
-        <Link to={`/clientes/${contrato.id_cliente}`}>{contrato.nombre_cliente}</Link> · {contrato.estado} ·{" "}
-        {dinero(contrato.monto_total)} {contrato.moneda}
-        {contrato.nombre_proyecto ? ` · ${contrato.nombre_proyecto}` : ""}
-      </p>
-      {contrato.clausula_mora ? <p>{contrato.clausula_mora}</p> : null}
+      <div className="resumen-ficha">
+        <div>
+          <span className="dato-etiqueta">Estado</span>
+          <InsigniaEstado estado={contrato.estado} />
+        </div>
+        <div>
+          <span className="dato-etiqueta">Monto</span>
+          <span className="dato-clave">
+            {dinero(contrato.monto_total)} <span className="dato-secundario">{contrato.moneda}</span>
+          </span>
+        </div>
+        <div>
+          <span className="dato-etiqueta">Cliente</span>
+          <Link to={`/clientes/${contrato.id_cliente}`}>{contrato.nombre_cliente}</Link>
+        </div>
+        <div>
+          <span className="dato-etiqueta">Inicio</span>
+          <span>{fecha(contrato.fecha_inicio)}</span>
+        </div>
+        <div>
+          <span className="dato-etiqueta">Fin</span>
+          <span>{fecha(contrato.fecha_fin)}</span>
+        </div>
+        {contrato.nombre_proyecto ? (
+          <div>
+            <span className="dato-etiqueta">Proyecto</span>
+            <span>{contrato.nombre_proyecto}</span>
+          </div>
+        ) : null}
+      </div>
+      {contrato.clausula_mora ? <p className="dato-secundario">{contrato.clausula_mora}</p> : null}
 
       <h2>Facturas</h2>
       {facturas.length === 0 ? (
@@ -174,10 +200,12 @@ export function ContratoFicha() {
             {facturas.map((f) => (
               <tr key={f.id_factura}>
                 <td>{f.numero}</td>
-                <td>{dinero(f.monto)}</td>
+                <td className="dato-fuerte">{dinero(f.monto)}</td>
                 <td>{dinero(f.pagado ?? 0)}</td>
                 <td>{fecha(f.fecha_vencimiento)}</td>
-                <td>{f.estado}</td>
+                <td>
+                  <InsigniaEstado estado={f.estado} />
+                </td>
               </tr>
             ))}
           </tbody>
@@ -206,8 +234,8 @@ export function ContratoFicha() {
               onChange={(e) => setFacturaForm((p) => ({ ...p, fecha_vencimiento: e.target.value }))}
             />
           </label>
-          <button className="btn" type="submit">
-            Emitir
+          <button className={contrato.estado === "INCUMPLIDO" ? "btn btn-secundario" : "btn"} type="submit">
+            Emitir factura
           </button>
         </form>
 
@@ -243,7 +271,7 @@ export function ContratoFicha() {
             Método
             <input value={pago.metodo} onChange={(e) => setPago((p) => ({ ...p, metodo: e.target.value }))} />
           </label>
-          <button className="btn" type="submit">
+          <button className="btn btn-secundario" type="submit">
             Registrar pago
           </button>
         </form>
@@ -279,7 +307,7 @@ export function ContratoFicha() {
             Motivo
             <input value={mora.motivo} onChange={(e) => setMora((p) => ({ ...p, motivo: e.target.value }))} />
           </label>
-          <button className="btn" type="submit">
+          <button className="btn btn-peligro" type="submit">
             Aplicar mora
           </button>
         </form>
@@ -303,15 +331,17 @@ export function ContratoFicha() {
             {multas.map((m) => (
               <tr key={m.id_multa}>
                 <td>{m.motivo}</td>
-                <td>{dinero(m.monto)}</td>
+                <td className="dato-fuerte">{dinero(m.monto)}</td>
                 <td>{fecha(m.fecha)}</td>
-                <td>{m.estado}</td>
+                <td>
+                  <InsigniaEstado estado={m.estado} />
+                </td>
                 <td className="acciones">
                   {m.estado === "PENDIENTE" ? (
                     <>
                       <button
                         type="button"
-                        className="btn-text"
+                        className="btn btn-positivo btn-compacto"
                         onClick={() =>
                           void actualizarMulta(m.id_multa, "PAGADA")
                             .then(() => {
@@ -325,7 +355,7 @@ export function ContratoFicha() {
                       </button>
                       <button
                         type="button"
-                        className="btn-text"
+                        className="btn btn-secundario btn-compacto"
                         onClick={() =>
                           void actualizarMulta(m.id_multa, "CONDONADA")
                             .then(() => {

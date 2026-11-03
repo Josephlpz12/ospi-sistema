@@ -130,11 +130,11 @@ export function SeccionContactos({ idCliente, puedeEditar }: Props) {
             />
             Contacto principal
           </label>
-          <button className="btn" type="submit">
+          <button className="btn btn-secundario" type="submit">
             {idEditando ? "Guardar cambios" : "Agregar contacto"}
           </button>
           {idEditando ? (
-            <button className="btn-text" type="button" onClick={cancelar}>
+            <button className="btn btn-secundario" type="button" onClick={cancelar}>
               Cancelar
             </button>
           ) : null}
@@ -166,10 +166,10 @@ export function SeccionContactos({ idCliente, puedeEditar }: Props) {
                 <td>{c.es_principal ? "Sí" : "No"}</td>
                 {puedeEditar ? (
                   <td className="acciones">
-                    <button type="button" className="btn-text" onClick={() => editar(c)}>
+                    <button type="button" className="btn btn-editar btn-compacto" onClick={() => editar(c)}>
                       Editar
                     </button>
-                    <button type="button" className="btn-text" onClick={() => void eliminar(c)}>
+                    <button type="button" className="btn btn-peligro btn-compacto" onClick={() => void eliminar(c)}>
                       Eliminar
                     </button>
                   </td>

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { esAdministrador } from "../autorizacion";
+import { InsigniaEstado } from "../componentes/InsigniaEstado";
 import { useConfirmar } from "../contexto/ConfirmacionContexto";
 import { useAuth } from "../contexto/AuthContexto";
 import { useToast } from "../contexto/ToastContexto";
-import { cancelarProyecto, listarProyectos } from "../servicios/proyectos.servicio";
+import { activarProyecto, cancelarProyecto, listarProyectos } from "../servicios/proyectos.servicio";
 import type { Proyecto } from "../tipos";
 
 export function ProyectosLista() {
@@ -25,6 +26,21 @@ export function ProyectosLista() {
   useEffect(() => {
     void cargar();
   }, []);
+
+  async function activar(id: number) {
+    const aceptado = await confirmar({
+      titulo: "Activar proyecto",
+      mensaje: "¿Activar este proyecto? Volverá al estado Activo.",
+    });
+    if (!aceptado) return;
+    try {
+      await activarProyecto(id);
+      toast.exito("Proyecto activado");
+      await cargar();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo activar");
+    }
+  }
 
   async function cancelar(id: number) {
     const aceptado = await confirmar({
@@ -71,13 +87,26 @@ export function ProyectosLista() {
               <td>{p.codigo}</td>
               <td>{p.nombre}</td>
               <td>{p.nombre_cliente}</td>
-              <td>{p.estado}</td>
-              <td>{Number(p.porcentaje_avance)}%</td>
+              <td>
+                <InsigniaEstado estado={p.estado} />
+              </td>
+              <td className="dato-fuerte">{Number(p.porcentaje_avance)}%</td>
               <td className="acciones">
-                <Link to={`/proyectos/${p.id_proyecto}/seguimiento`}>Seguimiento</Link>
-                {admin ? <Link to={`/proyectos/${p.id_proyecto}/editar`}>Editar</Link> : null}
+                <Link className="btn btn-secundario btn-compacto" to={`/proyectos/${p.id_proyecto}/seguimiento`}>
+                  Seguimiento
+                </Link>
+                {admin ? (
+                  <Link className="btn btn-editar btn-compacto" to={`/proyectos/${p.id_proyecto}/editar`}>
+                    Editar
+                  </Link>
+                ) : null}
+                {admin && p.estado === "Cancelado" ? (
+                  <button type="button" className="btn btn-positivo btn-compacto" onClick={() => void activar(p.id_proyecto)}>
+                    Activar
+                  </button>
+                ) : null}
                 {admin && p.estado !== "Cancelado" ? (
-                  <button type="button" className="btn-text" onClick={() => void cancelar(p.id_proyecto)}>
+                  <button type="button" className="btn btn-peligro btn-compacto" onClick={() => void cancelar(p.id_proyecto)}>
                     Cancelar
                   </button>
                 ) : null}

@@ -154,11 +154,11 @@ export function SeccionDirecciones({ idCliente, puedeEditar }: Props) {
             onChange={(ev) => cambiar("detalle", ev.target.value)}
             required
           />
-          <button className="btn" type="submit">
+          <button className="btn btn-secundario" type="submit">
             {idEditando ? "Guardar cambios" : "Agregar dirección"}
           </button>
           {idEditando ? (
-            <button className="btn-text" type="button" onClick={cancelar}>
+            <button className="btn btn-secundario" type="button" onClick={cancelar}>
               Cancelar
             </button>
           ) : null}
@@ -186,10 +186,10 @@ export function SeccionDirecciones({ idCliente, puedeEditar }: Props) {
                 <td>{d.detalle}</td>
                 {puedeEditar ? (
                   <td className="acciones">
-                    <button type="button" className="btn-text" onClick={() => editar(d)}>
+                    <button type="button" className="btn btn-editar btn-compacto" onClick={() => editar(d)}>
                       Editar
                     </button>
-                    <button type="button" className="btn-text" onClick={() => void eliminar(d)}>
+                    <button type="button" className="btn btn-peligro btn-compacto" onClick={() => void eliminar(d)}>
                       Eliminar
                     </button>
                   </td>

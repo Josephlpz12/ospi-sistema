@@ -151,7 +151,7 @@ export function Bitacora() {
         <div className="paginacion">
           <button
             type="button"
-            className="btn"
+            className="btn btn-secundario"
             disabled={filtros.pagina <= 1}
             onClick={() => setFiltros((actuales) => ({ ...actuales, pagina: actuales.pagina - 1 }))}
           >
@@ -162,7 +162,7 @@ export function Bitacora() {
           </span>
           <button
             type="button"
-            className="btn"
+            className="btn btn-secundario"
             disabled={filtros.pagina >= totalPaginas}
             onClick={() => setFiltros((actuales) => ({ ...actuales, pagina: actuales.pagina + 1 }))}
           >

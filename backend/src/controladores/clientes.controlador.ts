@@ -203,6 +203,51 @@ export async function actualizarCliente(req: Request, res: Response) {
   }
 }
 
+export async function activarCliente(req: Request, res: Response) {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) {
+    res.status(404).json({ ok: false, mensaje: "Cliente no encontrado" });
+    return;
+  }
+  try {
+    const resultado = await pool.query(
+      `UPDATE clientes c SET estado = 'ACTIVO'
+       FROM (SELECT estado FROM clientes WHERE id_cliente = $1) previo
+       WHERE c.id_cliente = $1 AND previo.estado = 'INACTIVO'
+       RETURNING c.id_cliente, previo.estado AS estado_anterior`,
+      [id],
+    );
+    if (!resultado.rows[0]) {
+      const existe = await pool.query("SELECT estado FROM clientes WHERE id_cliente = $1", [id]);
+      if (!existe.rows[0]) {
+        res.status(404).json({ ok: false, mensaje: "Cliente no encontrado" });
+        return;
+      }
+      const estado = existe.rows[0].estado as string;
+      res.status(400).json({
+        ok: false,
+        mensaje:
+          estado === "SUSPENDIDO"
+            ? "Un cliente suspendido se reactiva desde el contrato"
+            : "El cliente ya está activo",
+      });
+      return;
+    }
+    await registrarCambioAparte({
+      idUsuario: req.usuario?.id_usuario,
+      tabla: "clientes",
+      idRegistro: resultado.rows[0].id_cliente,
+      accion: "ACTIVAR",
+      antes: { estado: resultado.rows[0].estado_anterior },
+      despues: { estado: "ACTIVO" },
+    });
+    res.json({ ok: true, mensaje: "Cliente activado" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ ok: false, mensaje: "Error al activar el cliente" });
+  }
+}
+
 export async function desactivarCliente(req: Request, res: Response) {
   try {
     const resultado = await pool.query(

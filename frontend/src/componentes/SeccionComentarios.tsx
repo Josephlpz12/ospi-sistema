@@ -70,7 +70,7 @@ export function SeccionComentarios({ idProyecto, tareas, puedeComentar }: Props)
             required
           />
           <div className="form-actions">
-            <button className="btn" type="submit">
+            <button className="btn btn-secundario" type="submit">
               Comentar
             </button>
           </div>

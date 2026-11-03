@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { esAdministrador } from "../autorizacion";
+import { InsigniaEstado } from "../componentes/InsigniaEstado";
 import { useConfirmar } from "../contexto/ConfirmacionContexto";
 import { useAuth } from "../contexto/AuthContexto";
 import { useToast } from "../contexto/ToastContexto";
-import { inactivarCliente, listarClientes } from "../servicios/clientes.servicio";
+import { activarCliente, inactivarCliente, listarClientes } from "../servicios/clientes.servicio";
 import type { Cliente } from "../tipos";
 
 function nombreVisible(c: Cliente) {
@@ -30,6 +31,21 @@ export function ClientesLista() {
   useEffect(() => {
     void cargar();
   }, []);
+
+  async function activar(id: number) {
+    const aceptado = await confirmar({
+      titulo: "Activar cliente",
+      mensaje: "¿Activar este cliente?",
+    });
+    if (!aceptado) return;
+    try {
+      await activarCliente(id);
+      toast.exito("Cliente activado");
+      await cargar();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo activar");
+    }
+  }
 
   async function inactivar(id: number) {
     const aceptado = await confirmar({
@@ -71,12 +87,25 @@ export function ClientesLista() {
             <tr key={c.id_cliente}>
               <td>{nombreVisible(c)}</td>
               <td>{c.tipo_cliente === "EMPRESA" ? "Empresa" : "Individual"}</td>
-              <td>{c.estado}</td>
+              <td>
+                <InsigniaEstado estado={c.estado} />
+              </td>
               <td className="acciones">
-                <Link to={`/clientes/${c.id_cliente}`}>Ver</Link>
-                {admin ? <Link to={`/clientes/${c.id_cliente}/editar`}>Editar</Link> : null}
+                <Link className="btn btn-secundario btn-compacto" to={`/clientes/${c.id_cliente}`}>
+                  Ver
+                </Link>
+                {admin ? (
+                  <Link className="btn btn-editar btn-compacto" to={`/clientes/${c.id_cliente}/editar`}>
+                    Editar
+                  </Link>
+                ) : null}
+                {admin && c.estado === "INACTIVO" ? (
+                  <button type="button" className="btn btn-positivo btn-compacto" onClick={() => void activar(c.id_cliente)}>
+                    Activar
+                  </button>
+                ) : null}
                 {admin && c.estado !== "INACTIVO" ? (
-                  <button type="button" className="btn-text" onClick={() => void inactivar(c.id_cliente)}>
+                  <button type="button" className="btn btn-peligro btn-compacto" onClick={() => void inactivar(c.id_cliente)}>
                     Inactivar
                   </button>
                 ) : null}

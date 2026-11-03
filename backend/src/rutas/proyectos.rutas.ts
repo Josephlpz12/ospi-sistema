@@ -3,6 +3,7 @@ import { autenticar } from "../middleware/autenticar.js";
 import { ROLES, autorizar, todosLosRoles } from "../middleware/autorizar.js";
 import {
   actualizarProyecto,
+  activarProyecto,
   cancelarProyecto,
   crearProyecto,
   listarProyectos,
@@ -16,4 +17,5 @@ proyectosRutas.get("/", autorizar(...todosLosRoles), listarProyectos);
 proyectosRutas.get("/:id", autorizar(...todosLosRoles), obtenerProyecto);
 proyectosRutas.post("/", autorizar(ROLES.admin), crearProyecto);
 proyectosRutas.put("/:id", autorizar(ROLES.admin), actualizarProyecto);
+proyectosRutas.post("/:id/activar", autorizar(ROLES.admin), activarProyecto);
 proyectosRutas.delete("/:id", autorizar(ROLES.admin), cancelarProyecto);

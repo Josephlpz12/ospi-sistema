@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { InsigniaEstado } from "../componentes/InsigniaEstado";
 import { useToast } from "../contexto/ToastContexto";
 import { listarContratos, revisarFacturasVencidas } from "../servicios/finanzas.servicio";
 import type { Contrato } from "../tipos";
@@ -37,7 +38,7 @@ export function ContratosLista() {
       <div className="page-head">
         <h1>Contratos</h1>
         <div className="acciones">
-          <button type="button" className="btn-text" onClick={() => void revisar()}>
+          <button type="button" className="btn btn-secundario" onClick={() => void revisar()}>
             Revisar vencidas
           </button>
           <Link className="btn" to="/contratos/nuevo">
@@ -69,10 +70,14 @@ export function ContratosLista() {
                 <Link to={`/clientes/${c.id_cliente}`}>{c.nombre_cliente}</Link>
               </td>
               <td>{c.nombre_proyecto ?? "—"}</td>
-              <td>{dinero(c.monto_total)}</td>
-              <td>{c.estado}</td>
+              <td className="dato-fuerte">{dinero(c.monto_total)}</td>
+              <td>
+                <InsigniaEstado estado={c.estado} />
+              </td>
               <td className="acciones">
-                <Link to={`/contratos/${c.id_contrato}`}>Ver</Link>
+                <Link className="btn btn-secundario btn-compacto" to={`/contratos/${c.id_contrato}`}>
+                  Ver
+                </Link>
               </td>
             </tr>
           ))}

@@ -85,7 +85,7 @@ export function SeccionAsignaciones({ idProyecto, tareas, empleados, puedeAsigna
             <option value="Miembro del equipo">Miembro del equipo</option>
             <option value="Responsable">Responsable</option>
           </select>
-          <button className="btn" type="submit">
+          <button className="btn btn-secundario" type="submit">
             Asignar
           </button>
         </form>
@@ -117,7 +117,7 @@ export function SeccionAsignaciones({ idProyecto, tareas, empleados, puedeAsigna
               <td>{String(a.fecha_asignacion).slice(0, 10)}</td>
               {puedeAsignar ? (
                 <td>
-                  <button type="button" className="btn-text" onClick={() => void quitar(a)}>
+                  <button type="button" className="btn btn-peligro btn-compacto" onClick={() => void quitar(a)}>
                     Quitar
                   </button>
                 </td>
