@@ -52,6 +52,11 @@ h2 {
   display: grid;
   grid-template-columns: 240px 1fr;
   min-height: 100vh;
+  transition: grid-template-columns 0.2s ease;
+}
+
+.app-shell.menu-colapsado {
+  grid-template-columns: 76px 1fr;
 }
 
 .sidebar {
@@ -61,6 +66,34 @@ h2 {
     var(--fondo-oscuro);
   color: #fff;
   padding: 24px 16px;
+  overflow-x: hidden;
+}
+
+.sidebar-tope {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
+.btn-menu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+
+.btn-menu:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .brand {
@@ -70,7 +103,7 @@ h2 {
 }
 
 .brand-sub {
-  margin: 4px 0 28px;
+  margin: 4px 0 0;
   color: var(--violeta-suave);
   font-size: 0.85rem;
 }
@@ -85,6 +118,7 @@ h2 {
   display: flex;
   align-items: center;
   gap: 10px;
+  position: relative;
   color: #ececf6;
   text-decoration: none;
   padding: 10px 12px;
@@ -93,6 +127,7 @@ h2 {
 
 .sidebar a svg,
 .btn-salir svg,
+.topbar-usuario svg,
 .alerta-mensaje svg,
 .login-field-icon {
   flex-shrink: 0;
@@ -136,6 +171,50 @@ h2 {
   border-bottom: 1px solid var(--line);
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.topbar-usuario,
+.btn-salir {
+  position: relative;
+}
+
+.topbar-usuario {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.menu-colapsado .sidebar {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.menu-colapsado .sidebar-tope {
+  justify-content: center;
+}
+
+.menu-colapsado .marca-menu {
+  display: none;
+}
+
+.menu-colapsado .sidebar a {
+  justify-content: center;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.menu-colapsado .sidebar a span,
+.menu-colapsado .topbar-usuario span,
+.menu-colapsado .btn-salir span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .content {
@@ -866,11 +945,17 @@ small {
   .toast {
     animation: none;
   }
+
+  .app-shell {
+    transition: none;
+  }
 }
 
 @media (max-width: 800px) {
-  .app-shell {
+  .app-shell,
+  .app-shell.menu-colapsado {
     grid-template-columns: 1fr;
+    transition: none;
   }
   .stats {
     grid-template-columns: 1fr;
