@@ -1,4 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
+import { useConfirmar } from "../contexto/ConfirmacionContexto";
+import { useToast } from "../contexto/ToastContexto";
 import { eliminarDireccion, guardarDireccion, listarDirecciones } from "../servicios/clientes.servicio";
 import type { Direccion, TipoDireccion } from "../tipos";
 
@@ -41,8 +43,9 @@ const DEPARTAMENTOS = [
 const FORMULARIO_VACIO = { tipo: "FISCAL" as TipoDireccion, departamento_gt: "", municipio: "", detalle: "" };
 
 export function SeccionDirecciones({ idCliente, puedeEditar }: Props) {
+  const confirmar = useConfirmar();
+  const toast = useToast();
   const [direcciones, setDirecciones] = useState<Direccion[]>([]);
-  const [error, setError] = useState("");
   const [formulario, setFormulario] = useState(FORMULARIO_VACIO);
   const [idEditando, setIdEditando] = useState<number | null>(null);
 
@@ -53,7 +56,7 @@ export function SeccionDirecciones({ idCliente, puedeEditar }: Props) {
   useEffect(() => {
     setIdEditando(null);
     setFormulario(FORMULARIO_VACIO);
-    cargar().catch((err: Error) => setError(err.message));
+    cargar().catch((err: Error) => toast.error(err.message));
   }, [idCliente]);
 
   function cambiar(campo: keyof typeof FORMULARIO_VACIO, valor: string) {
@@ -61,7 +64,6 @@ export function SeccionDirecciones({ idCliente, puedeEditar }: Props) {
   }
 
   function editar(d: Direccion) {
-    setError("");
     setIdEditando(d.id_direccion);
     setFormulario({
       tipo: d.tipo,
@@ -78,25 +80,30 @@ export function SeccionDirecciones({ idCliente, puedeEditar }: Props) {
 
   async function guardar(e: FormEvent) {
     e.preventDefault();
-    setError("");
     try {
       await guardarDireccion(idCliente, formulario, idEditando ?? undefined);
+      toast.exito(idEditando ? "Dirección actualizada" : "Dirección agregada");
       cancelar();
       await cargar();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo guardar la dirección");
+      toast.error(err instanceof Error ? err.message : "No se pudo guardar la dirección");
     }
   }
 
   async function eliminar(d: Direccion) {
-    if (!confirm(`¿Eliminar la dirección ${TIPOS[d.tipo].toLowerCase()} «${d.detalle}»?`)) return;
-    setError("");
+    const aceptado = await confirmar({
+      titulo: "Eliminar dirección",
+      mensaje: `¿Eliminar la dirección ${TIPOS[d.tipo].toLowerCase()} «${d.detalle}»?`,
+      peligro: true,
+    });
+    if (!aceptado) return;
     try {
       await eliminarDireccion(idCliente, d.id_direccion);
+      toast.exito("Dirección eliminada");
       if (idEditando === d.id_direccion) cancelar();
       await cargar();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo eliminar la dirección");
+      toast.error(err instanceof Error ? err.message : "No se pudo eliminar la dirección");
     }
   }
 
@@ -105,7 +112,6 @@ export function SeccionDirecciones({ idCliente, puedeEditar }: Props) {
   return (
     <details className="card seccion-plegable">
       <summary>Direcciones ({direcciones.length})</summary>
-      {error ? <p className="alerta">{error}</p> : null}
       {puedeEditar ? (
         <form className="form-inline" onSubmit={(e) => void guardar(e)}>
           <select

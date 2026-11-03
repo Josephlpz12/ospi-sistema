@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useToast } from "../contexto/ToastContexto";
 import { generarAlertas, listarAlertas, marcarAlertaLeida } from "../servicios/alertas.servicio";
 import type { Alerta } from "../tipos";
 
@@ -12,24 +13,24 @@ function etiqueta(tipo: string) {
 }
 
 export function AlertasLista() {
+  const toast = useToast();
   const [alertas, setAlertas] = useState<Alerta[]>([]);
-  const [error, setError] = useState("");
 
   async function cargar() {
     setAlertas(await listarAlertas());
   }
 
   useEffect(() => {
-    cargar().catch((err: Error) => setError(err.message));
+    cargar().catch((err: Error) => toast.error(err.message));
   }, []);
 
   async function generar() {
-    setError("");
     try {
       await generarAlertas();
+      toast.exito("Alertas generadas");
       await cargar();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudieron generar");
+      toast.error(err instanceof Error ? err.message : "No se pudieron generar");
     }
   }
 
@@ -41,7 +42,6 @@ export function AlertasLista() {
           Generar alertas
         </button>
       </div>
-      {error ? <p className="alerta">{error}</p> : null}
       <table>
         <thead>
           <tr>
@@ -70,7 +70,14 @@ export function AlertasLista() {
                   <button
                     type="button"
                     className="btn-text"
-                    onClick={() => void marcarAlertaLeida(a.id_alerta).then(cargar).catch((err: Error) => setError(err.message))}
+                    onClick={() =>
+                      void marcarAlertaLeida(a.id_alerta)
+                        .then(() => {
+                          toast.exito("Alerta marcada como leída");
+                          return cargar();
+                        })
+                        .catch((err: Error) => toast.error(err.message))
+                    }
                   >
                     Marcar leída
                   </button>

@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useToast } from "../contexto/ToastContexto";
 import { listarClientes } from "../servicios/clientes.servicio";
 import { crearContrato, listarSuscripciones } from "../servicios/finanzas.servicio";
 import { listarProyectos } from "../servicios/proyectos.servicio";
@@ -12,6 +13,7 @@ function nombreCliente(c: Cliente) {
 
 export function ContratoFormulario() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [suscripciones, setSuscripciones] = useState<Suscripcion[]>([]);
@@ -64,6 +66,7 @@ export function ContratoFormulario() {
         fecha_fin: form.fecha_fin || null,
         clausula_mora: form.clausula_mora,
       });
+      toast.exito("Contrato creado");
       navigate(`/contratos/${creado.id_contrato}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo crear");

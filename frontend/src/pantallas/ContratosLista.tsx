@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { useToast } from "../contexto/ToastContexto";
 import { listarContratos, revisarFacturasVencidas } from "../servicios/finanzas.servicio";
 import type { Contrato } from "../tipos";
 
@@ -10,26 +11,24 @@ function dinero(valor: string | number) {
 export function ContratosLista() {
   const [params] = useSearchParams();
   const idCliente = params.get("id_cliente") ? Number(params.get("id_cliente")) : undefined;
+  const toast = useToast();
   const [contratos, setContratos] = useState<Contrato[]>([]);
-  const [error, setError] = useState("");
-  const [aviso, setAviso] = useState("");
 
   async function cargar() {
     setContratos(await listarContratos(idCliente));
   }
 
   useEffect(() => {
-    cargar().catch((err: Error) => setError(err.message));
+    cargar().catch((err: Error) => toast.error(err.message));
   }, [idCliente]);
 
   async function revisar() {
-    setError("");
     try {
       const r = await revisarFacturasVencidas();
-      setAviso(`${r.actualizadas} factura(s) pasaron a VENCIDA.`);
+      toast.info(`${r.actualizadas} factura(s) pasaron a VENCIDA.`);
       await cargar();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudieron revisar");
+      toast.error(err instanceof Error ? err.message : "No se pudieron revisar");
     }
   }
 
@@ -51,8 +50,6 @@ export function ContratosLista() {
           Filtrado por cliente #{idCliente}. <Link to="/contratos">Ver todos</Link>
         </p>
       ) : null}
-      {error ? <p className="alerta">{error}</p> : null}
-      {aviso ? <p>{aviso}</p> : null}
       <table>
         <thead>
           <tr>

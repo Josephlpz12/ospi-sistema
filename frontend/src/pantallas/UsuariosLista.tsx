@@ -1,19 +1,22 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useConfirmar } from "../contexto/ConfirmacionContexto";
 import { useAuth } from "../contexto/AuthContexto";
+import { useToast } from "../contexto/ToastContexto";
 import { cambiarEstadoUsuario, listarUsuarios } from "../servicios/usuarios.servicio";
 import type { Usuario } from "../tipos";
 
 export function UsuariosLista() {
   const { usuario } = useAuth();
+  const confirmar = useConfirmar();
+  const toast = useToast();
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-  const [error, setError] = useState("");
 
   async function cargar() {
     try {
       setUsuarios(await listarUsuarios());
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar");
+      toast.error(err instanceof Error ? err.message : "Error al cargar");
     }
   }
 
@@ -22,14 +25,19 @@ export function UsuariosLista() {
   }, []);
 
   async function cambiarEstado(u: Usuario) {
-    const accion = u.activo ? "inactivar" : "activar";
-    if (!confirm(`¿Desea ${accion} al usuario ${u.nombre_usuario}?`)) return;
-    setError("");
+    const inactivar = u.activo;
+    const aceptado = await confirmar({
+      titulo: inactivar ? "Inactivar usuario" : "Activar usuario",
+      mensaje: `¿Desea ${inactivar ? "inactivar" : "activar"} al usuario ${u.nombre_usuario}?`,
+      peligro: inactivar,
+    });
+    if (!aceptado) return;
     try {
       await cambiarEstadoUsuario(u.id_usuario, !u.activo);
+      toast.exito(inactivar ? "Usuario inactivado" : "Usuario activado");
       await cargar();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo cambiar el estado");
+      toast.error(err instanceof Error ? err.message : "No se pudo cambiar el estado");
     }
   }
 
@@ -41,7 +49,6 @@ export function UsuariosLista() {
           Nuevo usuario
         </Link>
       </div>
-      {error ? <p className="alerta">{error}</p> : null}
       <table>
         <thead>
           <tr>

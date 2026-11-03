@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { useToast } from "../contexto/ToastContexto";
 import { listarClientes } from "../servicios/clientes.servicio";
 import { guardarProyecto, obtenerProyecto } from "../servicios/proyectos.servicio";
 import type { Cliente } from "../tipos";
@@ -17,6 +18,7 @@ function fechaInput(valor: string | null) {
 export function ProyectoFormulario() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const editando = Boolean(id);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [error, setError] = useState("");
@@ -76,6 +78,7 @@ export function ProyectoFormulario() {
     if (editando && form.id_estado) cuerpo.id_estado = Number(form.id_estado);
     try {
       await guardarProyecto(cuerpo, id ? Number(id) : undefined);
+      toast.exito(editando ? "Proyecto actualizado" : "Proyecto creado");
       navigate("/proyectos");
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo guardar");

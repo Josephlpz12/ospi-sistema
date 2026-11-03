@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { esAdministrador } from "../autorizacion";
+import { useConfirmar } from "../contexto/ConfirmacionContexto";
 import { useAuth } from "../contexto/AuthContexto";
+import { useToast } from "../contexto/ToastContexto";
 import { inactivarCliente, listarClientes } from "../servicios/clientes.servicio";
 import type { Cliente } from "../tipos";
 
@@ -12,15 +14,16 @@ function nombreVisible(c: Cliente) {
 
 export function ClientesLista() {
   const { usuario } = useAuth();
+  const confirmar = useConfirmar();
+  const toast = useToast();
   const admin = esAdministrador(usuario?.nombre_rol);
   const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [error, setError] = useState("");
 
   async function cargar() {
     try {
       setClientes(await listarClientes());
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar");
+      toast.error(err instanceof Error ? err.message : "Error al cargar");
     }
   }
 
@@ -29,12 +32,18 @@ export function ClientesLista() {
   }, []);
 
   async function inactivar(id: number) {
-    if (!confirm("¿Inactivar este cliente?")) return;
+    const aceptado = await confirmar({
+      titulo: "Inactivar cliente",
+      mensaje: "¿Inactivar este cliente?",
+      peligro: true,
+    });
+    if (!aceptado) return;
     try {
       await inactivarCliente(id);
+      toast.exito("Cliente inactivado");
       await cargar();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo inactivar");
+      toast.error(err instanceof Error ? err.message : "No se pudo inactivar");
     }
   }
 
@@ -48,7 +57,6 @@ export function ClientesLista() {
           </Link>
         ) : null}
       </div>
-      {error ? <p className="alerta">{error}</p> : null}
       <table>
         <thead>
           <tr>

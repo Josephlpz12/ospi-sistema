@@ -1,4 +1,5 @@
 import { type FormEvent, useEffect, useState } from "react";
+import { useToast } from "../contexto/ToastContexto";
 import { crearComentario, listarComentarios } from "../servicios/seguimiento.servicio";
 import type { Comentario, Tarea } from "../tipos";
 
@@ -9,8 +10,8 @@ type Props = {
 };
 
 export function SeccionComentarios({ idProyecto, tareas, puedeComentar }: Props) {
+  const toast = useToast();
   const [comentarios, setComentarios] = useState<Comentario[]>([]);
-  const [error, setError] = useState("");
   const [texto, setTexto] = useState("");
   const [idTarea, setIdTarea] = useState("");
 
@@ -19,25 +20,24 @@ export function SeccionComentarios({ idProyecto, tareas, puedeComentar }: Props)
   }
 
   useEffect(() => {
-    cargar().catch((err: Error) => setError(err.message));
+    cargar().catch((err: Error) => toast.error(err.message));
   }, [idProyecto, tareas.length]);
 
   async function comentar(e: FormEvent) {
     e.preventDefault();
-    setError("");
     try {
       await crearComentario(idProyecto, { texto, id_tarea: idTarea ? Number(idTarea) : null });
+      toast.exito("Comentario agregado");
       setTexto("");
       await cargar();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo guardar el comentario");
+      toast.error(err instanceof Error ? err.message : "No se pudo guardar el comentario");
     }
   }
 
   return (
     <details className="card seccion-plegable">
       <summary>Comentarios ({comentarios.length})</summary>
-      {error ? <p className="alerta">{error}</p> : null}
       <ul className="lista-comentarios">
         {comentarios.map((c) => (
           <li key={c.id_comentario}>

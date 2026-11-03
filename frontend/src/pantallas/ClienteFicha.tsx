@@ -5,6 +5,7 @@ import { ListaDocumentos } from "../componentes/ListaDocumentos";
 import { SeccionContactos } from "../componentes/SeccionContactos";
 import { SeccionDirecciones } from "../componentes/SeccionDirecciones";
 import { useAuth } from "../contexto/AuthContexto";
+import { useToast } from "../contexto/ToastContexto";
 import { obtenerFichaCliente } from "../servicios/clientes.servicio";
 import { crearSuscripcion, listarProductos } from "../servicios/finanzas.servicio";
 import type { Cliente, Producto, Proyecto, Suscripcion } from "../tipos";
@@ -20,6 +21,7 @@ function fecha(valor: string | null) {
 
 export function ClienteFicha() {
   const { usuario } = useAuth();
+  const toast = useToast();
   const admin = esAdministrador(usuario?.nombre_rol);
   const finanzas = puedeOperarFinanzas(usuario?.nombre_rol);
   const { id } = useParams();
@@ -43,22 +45,22 @@ export function ClienteFicha() {
     if (!admin) return;
     listarProductos()
       .then(setProductos)
-      .catch((err: Error) => setError(err.message));
+      .catch((err: Error) => toast.error(err.message));
   }, [id, admin]);
 
   async function altaSuscripcion(e: FormEvent) {
     e.preventDefault();
     if (!id) return;
-    setError("");
     try {
       await crearSuscripcion(Number(id), {
         id_producto: Number(subForm.id_producto),
         fecha_inicio: subForm.fecha_inicio,
       });
+      toast.exito("Suscripción creada");
       setSubForm((p) => ({ ...p, id_producto: "" }));
       await cargar();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo crear la suscripción");
+      toast.error(err instanceof Error ? err.message : "No se pudo crear la suscripción");
     }
   }
 
@@ -83,7 +85,6 @@ export function ClienteFicha() {
           </Link>
         ) : null}
       </div>
-      {error ? <p className="alerta">{error}</p> : null}
       {cliente.estado === "SUSPENDIDO" ? (
         <p className="aviso-suspendido">Servicio suspendido por mora. Regularice facturas y multas, luego reactive el contrato.</p>
       ) : null}

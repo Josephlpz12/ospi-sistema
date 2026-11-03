@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../contexto/AuthContexto";
+import { useToast } from "../contexto/ToastContexto";
 import { guardarUsuario, listarRoles, obtenerUsuario, restablecerClave } from "../servicios/usuarios.servicio";
 import type { Rol } from "../tipos";
 
@@ -8,11 +9,11 @@ export function UsuarioFormulario() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { usuario } = useAuth();
+  const toast = useToast();
   const editando = Boolean(id);
   const propio = editando && Number(id) === usuario?.id_usuario;
   const [roles, setRoles] = useState<Rol[]>([]);
   const [error, setError] = useState("");
-  const [aviso, setAviso] = useState("");
   const [cargando, setCargando] = useState(false);
   const [nuevaClave, setNuevaClave] = useState("");
   const [empleadoActual, setEmpleadoActual] = useState("");
@@ -60,7 +61,6 @@ export function UsuarioFormulario() {
   async function enviar(e: FormEvent) {
     e.preventDefault();
     setError("");
-    setAviso("");
     setCargando(true);
     const cuerpo: Record<string, unknown> = {
       correo: form.correo,
@@ -75,6 +75,7 @@ export function UsuarioFormulario() {
     }
     try {
       await guardarUsuario(cuerpo, id ? Number(id) : undefined);
+      toast.exito(editando ? "Usuario actualizado" : "Usuario creado");
       navigate("/usuarios");
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo guardar");
@@ -87,11 +88,10 @@ export function UsuarioFormulario() {
     e.preventDefault();
     if (!id) return;
     setError("");
-    setAviso("");
     try {
       await restablecerClave(Number(id), nuevaClave);
       setNuevaClave("");
-      setAviso("Contraseña restablecida.");
+      toast.exito("Contraseña restablecida");
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo restablecer la contraseña");
     }
@@ -101,7 +101,6 @@ export function UsuarioFormulario() {
     <section>
       <h1>{editando ? "Editar usuario" : "Nuevo usuario"}</h1>
       {error ? <p className="alerta">{error}</p> : null}
-      {aviso ? <p>{aviso}</p> : null}
       <form className="card form" onSubmit={enviar}>
         <label>
           Nombre de usuario

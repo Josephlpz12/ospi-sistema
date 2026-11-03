@@ -1,21 +1,24 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { esAdministrador } from "../autorizacion";
+import { useConfirmar } from "../contexto/ConfirmacionContexto";
 import { useAuth } from "../contexto/AuthContexto";
+import { useToast } from "../contexto/ToastContexto";
 import { cancelarProyecto, listarProyectos } from "../servicios/proyectos.servicio";
 import type { Proyecto } from "../tipos";
 
 export function ProyectosLista() {
   const { usuario } = useAuth();
+  const confirmar = useConfirmar();
+  const toast = useToast();
   const admin = esAdministrador(usuario?.nombre_rol);
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
-  const [error, setError] = useState("");
 
   async function cargar() {
     try {
       setProyectos(await listarProyectos());
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al cargar");
+      toast.error(err instanceof Error ? err.message : "Error al cargar");
     }
   }
 
@@ -24,12 +27,20 @@ export function ProyectosLista() {
   }, []);
 
   async function cancelar(id: number) {
-    if (!confirm("¿Cancelar este proyecto?")) return;
+    const aceptado = await confirmar({
+      titulo: "Cancelar proyecto",
+      mensaje: "¿Cancelar este proyecto?",
+      peligro: true,
+      textoCancelar: "Volver",
+      textoConfirmar: "Cancelar proyecto",
+    });
+    if (!aceptado) return;
     try {
       await cancelarProyecto(id);
+      toast.exito("Proyecto cancelado");
       await cargar();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo cancelar");
+      toast.error(err instanceof Error ? err.message : "No se pudo cancelar");
     }
   }
 
@@ -43,7 +54,6 @@ export function ProyectosLista() {
           </Link>
         ) : null}
       </div>
-      {error ? <p className="alerta">{error}</p> : null}
       <table>
         <thead>
           <tr>

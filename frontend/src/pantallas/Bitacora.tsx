@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useToast } from "../contexto/ToastContexto";
 import { listarBitacora, type FiltrosBitacora, type PaginaBitacora } from "../servicios/bitacora.servicio";
 import { listarUsuarios } from "../servicios/usuarios.servicio";
 import type { Usuario } from "../tipos";
@@ -43,28 +44,27 @@ export function Bitacora() {
   const [filtros, setFiltros] = useState<FiltrosBitacora>(FILTROS_INICIALES);
   const [datos, setDatos] = useState<PaginaBitacora | null>(null);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-  const [error, setError] = useState("");
+  const toast = useToast();
 
   useEffect(() => {
     listarUsuarios()
       .then(setUsuarios)
-      .catch((err) => setError(err instanceof Error ? err.message : "Error al cargar los usuarios"));
-  }, []);
+      .catch((err) => toast.error(err instanceof Error ? err.message : "Error al cargar los usuarios"));
+  }, [toast]);
 
   useEffect(() => {
     let vigente = true;
-    setError("");
     listarBitacora(filtros)
       .then((pagina) => {
         if (vigente) setDatos(pagina);
       })
       .catch((err) => {
-        if (vigente) setError(err instanceof Error ? err.message : "Error al cargar la bitácora");
+        if (vigente) toast.error(err instanceof Error ? err.message : "Error al cargar la bitácora");
       });
     return () => {
       vigente = false;
     };
-  }, [filtros]);
+  }, [filtros, toast]);
 
   function cambiarFiltro(campo: "id_usuario" | "tabla" | "desde" | "hasta", valor: string) {
     setFiltros((actuales) => ({ ...actuales, [campo]: valor, pagina: 1 }));
@@ -77,7 +77,6 @@ export function Bitacora() {
       <div className="page-head">
         <h1>Bitácora</h1>
       </div>
-      {error ? <p className="alerta">{error}</p> : null}
       <form className="card form-inline filtros-bitacora" onSubmit={(e) => e.preventDefault()}>
         <label>
           Usuario

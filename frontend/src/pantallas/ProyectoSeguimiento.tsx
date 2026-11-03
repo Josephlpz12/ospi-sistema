@@ -1,7 +1,9 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { esAdministrador, puedeActualizarSeguimiento } from "../autorizacion";
+import { useConfirmar } from "../contexto/ConfirmacionContexto";
 import { useAuth } from "../contexto/AuthContexto";
+import { useToast } from "../contexto/ToastContexto";
 import { obtenerProyecto } from "../servicios/proyectos.servicio";
 import {
   actualizarFase,
@@ -31,6 +33,8 @@ function etiquetaEstado(estado: string) {
 
 export function ProyectoSeguimiento() {
   const { usuario } = useAuth();
+  const confirmar = useConfirmar();
+  const toast = useToast();
   const admin = esAdministrador(usuario?.nombre_rol);
   const puedeEstado = puedeActualizarSeguimiento(usuario?.nombre_rol);
   const { id } = useParams();
@@ -72,19 +76,18 @@ export function ProyectoSeguimiento() {
 
   async function altaFase(e: FormEvent) {
     e.preventDefault();
-    setError("");
     try {
       await crearFase(idProyecto, { nombre: nombreFase });
+      toast.exito("Fase agregada");
       setNombreFase("");
       await cargar();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo crear la fase");
+      toast.error(err instanceof Error ? err.message : "No se pudo crear la fase");
     }
   }
 
   async function altaTarea(e: FormEvent) {
     e.preventDefault();
-    setError("");
     try {
       await crearTarea(idProyecto, {
         titulo: tituloTarea,
@@ -92,22 +95,55 @@ export function ProyectoSeguimiento() {
         id_asignado: idAsignado ? Number(idAsignado) : null,
         fecha_limite: fechaLimite || null,
       });
+      toast.exito("Tarea agregada");
       setTituloTarea("");
       await cargar();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo crear la tarea");
+      toast.error(err instanceof Error ? err.message : "No se pudo crear la tarea");
     }
   }
 
   async function altaAvance(e: FormEvent) {
     e.preventDefault();
-    setError("");
     try {
       await registrarAvance(idProyecto, { porcentaje: Number(pctAvance), comentario });
+      toast.exito("Avance registrado");
       setComentario("");
       await cargar();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo registrar el avance");
+      toast.error(err instanceof Error ? err.message : "No se pudo registrar el avance");
+    }
+  }
+
+  async function quitarFase(idFase: number) {
+    const aceptado = await confirmar({
+      titulo: "Eliminar fase",
+      mensaje: "¿Eliminar esta fase?",
+      peligro: true,
+    });
+    if (!aceptado) return;
+    try {
+      await eliminarFase(idProyecto, idFase);
+      toast.exito("Fase eliminada");
+      await cargar();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo eliminar la fase");
+    }
+  }
+
+  async function quitarTarea(idTarea: number) {
+    const aceptado = await confirmar({
+      titulo: "Eliminar tarea",
+      mensaje: "¿Eliminar esta tarea?",
+      peligro: true,
+    });
+    if (!aceptado) return;
+    try {
+      await eliminarTarea(idProyecto, idTarea);
+      toast.exito("Tarea eliminada");
+      await cargar();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo eliminar la tarea");
     }
   }
 
@@ -132,8 +168,6 @@ export function ProyectoSeguimiento() {
           ? ` · ${proyecto.resumen.fases} fases · ${proyecto.resumen.tareas_abiertas} tareas abiertas`
           : ""}
       </p>
-      {error ? <p className="alerta">{error}</p> : null}
-
       <div className="seguimiento-grid">
         <article className="card">
           <h2>Fases</h2>
@@ -162,7 +196,12 @@ export function ProyectoSeguimiento() {
                       <select
                         value={f.estado}
                         onChange={(ev) => {
-                          void actualizarFase(idProyecto, f.id_fase, { estado: ev.target.value }).then(cargar).catch((err: Error) => setError(err.message));
+                          void actualizarFase(idProyecto, f.id_fase, { estado: ev.target.value })
+                            .then(() => {
+                              toast.exito("Estado de la fase actualizado");
+                              return cargar();
+                            })
+                            .catch((err: Error) => toast.error(err.message));
                         }}
                       >
                         <option value="PENDIENTE">Pendiente</option>
@@ -178,11 +217,7 @@ export function ProyectoSeguimiento() {
                       <button
                         type="button"
                         className="btn-text"
-                        onClick={() => {
-                          if (confirm("¿Eliminar esta fase?")) {
-                            void eliminarFase(idProyecto, f.id_fase).then(cargar).catch((err: Error) => setError(err.message));
-                          }
-                        }}
+                        onClick={() => void quitarFase(f.id_fase)}
                       >
                         Quitar
                       </button>
@@ -247,7 +282,12 @@ export function ProyectoSeguimiento() {
                       <select
                         value={t.estado}
                         onChange={(ev) => {
-                          void actualizarTarea(idProyecto, t.id_tarea, { estado: ev.target.value }).then(cargar).catch((err: Error) => setError(err.message));
+                          void actualizarTarea(idProyecto, t.id_tarea, { estado: ev.target.value })
+                            .then(() => {
+                              toast.exito("Estado de la tarea actualizado");
+                              return cargar();
+                            })
+                            .catch((err: Error) => toast.error(err.message));
                         }}
                       >
                         <option value="PENDIENTE">Pendiente</option>
@@ -264,11 +304,7 @@ export function ProyectoSeguimiento() {
                       <button
                         type="button"
                         className="btn-text"
-                        onClick={() => {
-                          if (confirm("¿Eliminar esta tarea?")) {
-                            void eliminarTarea(idProyecto, t.id_tarea).then(cargar).catch((err: Error) => setError(err.message));
-                          }
-                        }}
+                        onClick={() => void quitarTarea(t.id_tarea)}
                       >
                         Quitar
                       </button>

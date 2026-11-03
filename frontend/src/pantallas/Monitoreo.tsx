@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useToast } from "../contexto/ToastContexto";
 import { listarProyectosActivos } from "../servicios/monitoreo.servicio";
 import type { ProyectoMonitoreo } from "../tipos";
 
@@ -8,20 +9,23 @@ function fecha(valor: string | null) {
 }
 
 export function Monitoreo() {
+  const toast = useToast();
   const [proyectos, setProyectos] = useState<ProyectoMonitoreo[]>([]);
-  const [error, setError] = useState("");
+  const [listo, setListo] = useState(false);
 
   useEffect(() => {
     listarProyectosActivos()
-      .then(setProyectos)
-      .catch((err: Error) => setError(err.message));
-  }, []);
+      .then((lista) => {
+        setProyectos(lista);
+        setListo(true);
+      })
+      .catch((err: Error) => toast.error(err.message));
+  }, [toast]);
 
   return (
     <section>
       <h1>Monitoreo</h1>
       <p className="muted-line">Todos los proyectos en estado Activo (no es el recorte “Requieren atención”).</p>
-      {error ? <p className="alerta">{error}</p> : null}
       <table>
         <thead>
           <tr>
@@ -50,7 +54,7 @@ export function Monitoreo() {
           ))}
         </tbody>
       </table>
-      {proyectos.length === 0 && !error ? <p>No hay proyectos activos.</p> : null}
+      {listo && proyectos.length === 0 ? <p>No hay proyectos activos.</p> : null}
     </section>
   );
 }

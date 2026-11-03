@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { useToast } from "../contexto/ToastContexto";
 import { guardarCliente, obtenerFichaCliente } from "../servicios/clientes.servicio";
 
 type Tipo = "INDIVIDUAL" | "EMPRESA";
@@ -7,6 +8,7 @@ type Tipo = "INDIVIDUAL" | "EMPRESA";
 export function ClienteFormulario() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const editando = Boolean(id);
   const [tipo, setTipo] = useState<Tipo>("INDIVIDUAL");
   const [error, setError] = useState("");
@@ -77,6 +79,7 @@ export function ClienteFormulario() {
     }
     try {
       await guardarCliente(cuerpo, id ? Number(id) : undefined);
+      toast.exito(editando ? "Cliente actualizado" : "Cliente creado");
       navigate("/clientes");
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo guardar");

@@ -1,5 +1,7 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { useConfirmar } from "../contexto/ConfirmacionContexto";
+import { useToast } from "../contexto/ToastContexto";
 import {
   actualizarMulta,
   aplicarMora,
@@ -21,11 +23,12 @@ function fecha(valor: string | null) {
 
 export function ContratoFicha() {
   const { id } = useParams();
+  const confirmar = useConfirmar();
+  const toast = useToast();
   const [contrato, setContrato] = useState<Contrato | null>(null);
   const [facturas, setFacturas] = useState<Factura[]>([]);
   const [multas, setMultas] = useState<Multa[]>([]);
   const [error, setError] = useState("");
-  const [aviso, setAviso] = useState("");
   const [facturaForm, setFacturaForm] = useState({ monto: "", fecha_vencimiento: "" });
   const [pago, setPago] = useState({ id_factura: "", monto: "", metodo: "Transferencia" });
   const [mora, setMora] = useState({ id_factura: "", porcentaje: "10", motivo: "Impago de factura" });
@@ -45,71 +48,73 @@ export function ContratoFicha() {
   async function emitir(e: FormEvent) {
     e.preventDefault();
     if (!id) return;
-    setError("");
     try {
       await crearFactura(Number(id), {
         monto: Number(facturaForm.monto),
         fecha_vencimiento: facturaForm.fecha_vencimiento || null,
       });
+      toast.exito("Factura emitida");
       setFacturaForm({ monto: "", fecha_vencimiento: "" });
       await cargar();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo emitir");
+      toast.error(err instanceof Error ? err.message : "No se pudo emitir");
     }
   }
 
   async function pagar(e: FormEvent) {
     e.preventDefault();
-    setError("");
     try {
       await registrarPago(Number(pago.id_factura), {
         monto: Number(pago.monto),
         metodo: pago.metodo,
       });
       setPago({ id_factura: "", monto: "", metodo: "Transferencia" });
-      setAviso("Pago registrado.");
+      toast.exito("Pago registrado");
       await cargar();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo registrar el pago");
+      toast.error(err instanceof Error ? err.message : "No se pudo registrar el pago");
     }
   }
 
   async function moraFactura(e: FormEvent) {
     e.preventDefault();
-    if (!confirm("¿Aplicar mora? Se generará multa y se suspenderá el servicio.")) return;
-    setError("");
+    const aceptado = await confirmar({
+      titulo: "Aplicar mora",
+      mensaje: "¿Aplicar mora? Se generará multa y se suspenderá el servicio.",
+      peligro: true,
+      textoConfirmar: "Aplicar mora",
+    });
+    if (!aceptado) return;
     try {
       await aplicarMora(Number(mora.id_factura), {
         porcentaje: Number(mora.porcentaje),
         motivo: mora.motivo,
       });
-      setAviso("Mora aplicada: multa y servicio suspendido.");
+      toast.exito("Mora aplicada: multa y servicio suspendido");
       await cargar();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo aplicar mora");
+      toast.error(err instanceof Error ? err.message : "No se pudo aplicar mora");
     }
   }
 
   async function reactivar() {
     if (!id) return;
-    setError("");
     try {
       const r = await reactivarContrato(Number(id));
-      setAviso(r.mensaje ?? "Servicio reactivado");
+      toast.exito(r.mensaje ?? "Servicio reactivado");
       await cargar();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo reactivar");
+      toast.error(err instanceof Error ? err.message : "No se pudo reactivar");
     }
   }
 
   async function revisar() {
-    setError("");
     try {
       const r = await revisarFacturasVencidas();
-      setAviso(`${r.actualizadas} factura(s) pasaron a VENCIDA.`);
+      toast.info(`${r.actualizadas} factura(s) pasaron a VENCIDA.`);
       await cargar();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudieron revisar");
+      toast.error(err instanceof Error ? err.message : "No se pudieron revisar");
     }
   }
 
@@ -144,8 +149,6 @@ export function ContratoFicha() {
       {contrato.estado === "INCUMPLIDO" ? (
         <p className="aviso-suspendido">Contrato incumplido. El servicio queda suspendido hasta pagar y reactivar.</p>
       ) : null}
-      {error ? <p className="alerta">{error}</p> : null}
-      {aviso ? <p>{aviso}</p> : null}
       <p className="muted-line">
         <Link to={`/clientes/${contrato.id_cliente}`}>{contrato.nombre_cliente}</Link> · {contrato.estado} ·{" "}
         {dinero(contrato.monto_total)} {contrato.moneda}
@@ -311,8 +314,11 @@ export function ContratoFicha() {
                         className="btn-text"
                         onClick={() =>
                           void actualizarMulta(m.id_multa, "PAGADA")
-                            .then(cargar)
-                            .catch((err: Error) => setError(err.message))
+                            .then(() => {
+                              toast.exito("Multa marcada como pagada");
+                              return cargar();
+                            })
+                            .catch((err: Error) => toast.error(err.message))
                         }
                       >
                         Marcar pagada
@@ -322,8 +328,11 @@ export function ContratoFicha() {
                         className="btn-text"
                         onClick={() =>
                           void actualizarMulta(m.id_multa, "CONDONADA")
-                            .then(cargar)
-                            .catch((err: Error) => setError(err.message))
+                            .then(() => {
+                              toast.exito("Multa condonada");
+                              return cargar();
+                            })
+                            .catch((err: Error) => toast.error(err.message))
                         }
                       >
                         Condonar

@@ -1,5 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProveedor } from "./contexto/AuthContexto";
+import { ConfirmacionProveedor } from "./contexto/ConfirmacionContexto";
+import { ToastProveedor } from "./contexto/ToastContexto";
 import { Layout } from "./componentes/Layout";
 import { RutaPrivada } from "./componentes/RutaPrivada";
 import { RutaPorRol } from "./componentes/RutaPorRol";
@@ -24,6 +26,8 @@ import { Bitacora } from "./pantallas/Bitacora";
 export default function App() {
   return (
     <AuthProveedor>
+      <ToastProveedor>
+      <ConfirmacionProveedor>
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -54,6 +58,8 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+      </ConfirmacionProveedor>
+      </ToastProveedor>
     </AuthProveedor>
   );
 }

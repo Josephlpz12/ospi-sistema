@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Ban, Bell, CalendarClock, CircleCheck, FolderKanban, Receipt, TrendingDown, Users } from "lucide-react";
 import { esAdministrador } from "../autorizacion";
 import { useAuth } from "../contexto/AuthContexto";
+import { useToast } from "../contexto/ToastContexto";
 import { listarClientes } from "../servicios/clientes.servicio";
 import { listarProyectos } from "../servicios/proyectos.servicio";
 import { generarAlertas, listarAlertas } from "../servicios/alertas.servicio";
@@ -25,10 +26,10 @@ const iconosAlerta = {
 
 export function Panel() {
   const { usuario } = useAuth();
+  const toast = useToast();
   const [clientes, setClientes] = useState(0);
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [alertas, setAlertas] = useState<Alerta[]>([]);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     Promise.all([listarClientes(), listarProyectos(), generarAlertas().catch(() => listarAlertas(true))])
@@ -37,8 +38,8 @@ export function Panel() {
         setProyectos(listaProyectos);
         setAlertas(listaAlertas.filter((a) => !a.leida).slice(0, 5));
       })
-      .catch((err: Error) => setError(err.message));
-  }, []);
+      .catch((err: Error) => toast.error(err.message));
+  }, [toast]);
 
   const activos = proyectos.filter((p) => p.estado === "Activo").length;
   const hoy = new Date();
@@ -60,7 +61,6 @@ export function Panel() {
           Tablero de monitoreo
         </Link>
       </div>
-      {error ? <p className="alerta">{error}</p> : null}
       <div className="stats">
         <article className="card stat">
           <span className="stat-icono stat-icono-clientes">

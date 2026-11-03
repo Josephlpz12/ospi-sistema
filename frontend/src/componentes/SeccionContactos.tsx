@@ -1,4 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
+import { useConfirmar } from "../contexto/ConfirmacionContexto";
+import { useToast } from "../contexto/ToastContexto";
 import { eliminarContacto, guardarContacto, listarContactos } from "../servicios/clientes.servicio";
 import type { Contacto } from "../tipos";
 
@@ -10,8 +12,9 @@ type Props = {
 const FORMULARIO_VACIO = { nombres: "", apellidos: "", cargo: "", telefono: "", correo: "", es_principal: false };
 
 export function SeccionContactos({ idCliente, puedeEditar }: Props) {
+  const confirmar = useConfirmar();
+  const toast = useToast();
   const [contactos, setContactos] = useState<Contacto[]>([]);
-  const [error, setError] = useState("");
   const [formulario, setFormulario] = useState(FORMULARIO_VACIO);
   const [idEditando, setIdEditando] = useState<number | null>(null);
 
@@ -22,7 +25,7 @@ export function SeccionContactos({ idCliente, puedeEditar }: Props) {
   useEffect(() => {
     setIdEditando(null);
     setFormulario(FORMULARIO_VACIO);
-    cargar().catch((err: Error) => setError(err.message));
+    cargar().catch((err: Error) => toast.error(err.message));
   }, [idCliente]);
 
   function cambiar(campo: keyof typeof FORMULARIO_VACIO, valor: string | boolean) {
@@ -30,7 +33,6 @@ export function SeccionContactos({ idCliente, puedeEditar }: Props) {
   }
 
   function editar(c: Contacto) {
-    setError("");
     setIdEditando(c.id_contacto);
     setFormulario({
       nombres: c.nombres,
@@ -49,32 +51,36 @@ export function SeccionContactos({ idCliente, puedeEditar }: Props) {
 
   async function guardar(e: FormEvent) {
     e.preventDefault();
-    setError("");
     try {
       await guardarContacto(idCliente, formulario, idEditando ?? undefined);
+      toast.exito(idEditando ? "Contacto actualizado" : "Contacto agregado");
       cancelar();
       await cargar();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo guardar el contacto");
+      toast.error(err instanceof Error ? err.message : "No se pudo guardar el contacto");
     }
   }
 
   async function eliminar(c: Contacto) {
-    if (!confirm(`¿Eliminar el contacto ${c.nombres} ${c.apellidos}?`)) return;
-    setError("");
+    const aceptado = await confirmar({
+      titulo: "Eliminar contacto",
+      mensaje: `¿Eliminar el contacto ${c.nombres} ${c.apellidos}?`,
+      peligro: true,
+    });
+    if (!aceptado) return;
     try {
       await eliminarContacto(idCliente, c.id_contacto);
+      toast.exito("Contacto eliminado");
       if (idEditando === c.id_contacto) cancelar();
       await cargar();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo eliminar el contacto");
+      toast.error(err instanceof Error ? err.message : "No se pudo eliminar el contacto");
     }
   }
 
   return (
     <details className="card seccion-plegable">
       <summary>Contactos ({contactos.length})</summary>
-      {error ? <p className="alerta">{error}</p> : null}
       {puedeEditar ? (
         <form className="form-inline" onSubmit={(e) => void guardar(e)}>
           <input

@@ -1,4 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
+import { useConfirmar } from "../contexto/ConfirmacionContexto";
+import { useToast } from "../contexto/ToastContexto";
 import { asignarEmpleado, listarAsignaciones, quitarAsignacion } from "../servicios/seguimiento.servicio";
 import type { Asignacion, Empleado, Tarea } from "../tipos";
 
@@ -10,8 +12,9 @@ type Props = {
 };
 
 export function SeccionAsignaciones({ idProyecto, tareas, empleados, puedeAsignar }: Props) {
+  const confirmar = useConfirmar();
+  const toast = useToast();
   const [asignaciones, setAsignaciones] = useState<Asignacion[]>([]);
-  const [error, setError] = useState("");
   const [idEmpleado, setIdEmpleado] = useState("");
   const [idTarea, setIdTarea] = useState("");
   const [rol, setRol] = useState("Miembro del equipo");
@@ -21,41 +24,45 @@ export function SeccionAsignaciones({ idProyecto, tareas, empleados, puedeAsigna
   }
 
   useEffect(() => {
-    cargar().catch((err: Error) => setError(err.message));
+    cargar().catch((err: Error) => toast.error(err.message));
   }, [idProyecto, tareas.length]);
 
   async function asignar(e: FormEvent) {
     e.preventDefault();
-    setError("");
     try {
       await asignarEmpleado(idProyecto, {
         id_empleado: Number(idEmpleado),
         id_tarea: idTarea ? Number(idTarea) : null,
         rol_en_proyecto: rol,
       });
+      toast.exito("Empleado asignado");
       setIdEmpleado("");
       await cargar();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo asignar");
+      toast.error(err instanceof Error ? err.message : "No se pudo asignar");
     }
   }
 
   async function quitar(a: Asignacion) {
     const destino = a.titulo_tarea ? `la tarea «${a.titulo_tarea}»` : "el proyecto";
-    if (!confirm(`¿Quitar a ${a.nombre_empleado} de ${destino}?`)) return;
-    setError("");
+    const aceptado = await confirmar({
+      titulo: "Quitar asignación",
+      mensaje: `¿Quitar a ${a.nombre_empleado} de ${destino}?`,
+      peligro: true,
+    });
+    if (!aceptado) return;
     try {
       await quitarAsignacion(idProyecto, a.id_asignacion);
+      toast.exito("Asignación eliminada");
       await cargar();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo quitar la asignación");
+      toast.error(err instanceof Error ? err.message : "No se pudo quitar la asignación");
     }
   }
 
   return (
     <details className="card seccion-plegable">
       <summary>Asignaciones ({asignaciones.length})</summary>
-      {error ? <p className="alerta">{error}</p> : null}
       {puedeAsignar ? (
         <form className="form-inline" onSubmit={(e) => void asignar(e)}>
           <select value={idEmpleado} onChange={(ev) => setIdEmpleado(ev.target.value)} required>
