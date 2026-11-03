@@ -506,9 +506,13 @@ export async function convertirProspecto(req: Request, res: Response) {
         idUsuario,
       );
     } else {
-      const cliente = await cx.query("SELECT id_cliente FROM clientes WHERE id_cliente = $1 FOR UPDATE", [idClientePedido]);
+      const cliente = await cx.query("SELECT id_cliente, estado FROM clientes WHERE id_cliente = $1 FOR UPDATE", [idClientePedido]);
       if (!cliente.rows[0]) {
         await rechazar(cx, res, 404, "Cliente no encontrado");
+        return;
+      }
+      if (cliente.rows[0].estado !== "ACTIVO") {
+        await rechazar(cx, res, 400, "Solo se puede vincular un prospecto a un cliente activo");
         return;
       }
       idCliente = cliente.rows[0].id_cliente as number;

@@ -199,11 +199,13 @@ export function ProspectoConversion() {
               Cliente
               <select value={idCliente} onChange={(e) => setIdCliente(e.target.value)} required>
                 <option value="">Seleccione…</option>
-                {clientes.map((c) => (
-                  <option key={c.id_cliente} value={c.id_cliente}>
-                    {nombreCliente(c)}
-                  </option>
-                ))}
+                {clientes
+                  .filter((c) => c.estado === "ACTIVO")
+                  .map((c) => (
+                    <option key={c.id_cliente} value={c.id_cliente}>
+                      {nombreCliente(c)}
+                    </option>
+                  ))}
               </select>
             </label>
             {idCliente && tienePrincipal !== null ? (
