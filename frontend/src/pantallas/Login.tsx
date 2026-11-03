@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Lock, User } from "lucide-react";
+import { BotonTema } from "../componentes/BotonTema";
 import { useAuth } from "../contexto/AuthContexto";
 
 export function Login() {
@@ -32,6 +33,9 @@ export function Login() {
     <div className="login-page">
       <div className="login-card">
         <form className="login-form" onSubmit={enviar}>
+          <div className="login-tema">
+            <BotonTema />
+          </div>
           <h1 className="login-title">Iniciar sesión</h1>
           <p className="login-subtitle">Sistema de gestión de proyectos y clientes</p>
           {error ? <p className="alerta">{error}</p> : null}
@@ -42,7 +46,6 @@ export function Login() {
               <input
                 value={usuario}
                 onChange={(ev) => setUsuario(ev.target.value)}
-                placeholder="Usuario o correo"
                 autoComplete="username"
                 required
               />

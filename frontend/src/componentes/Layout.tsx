@@ -14,6 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import { esAdministrador, puedeOperarFinanzas } from "../autorizacion";
+import { BotonTema } from "./BotonTema";
 import { useAuth } from "../contexto/AuthContexto";
 
 const CLAVE_MENU = "ospi-menu-colapsado";
@@ -117,6 +118,7 @@ export function Layout() {
       </aside>
       <div className="main">
         <header className="topbar">
+          <BotonTema />
           <span className="topbar-usuario" title={identidad}>
             <User size={16} aria-hidden />
             <span>{identidad}</span>

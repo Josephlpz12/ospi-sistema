@@ -11,6 +11,17 @@
       rel="stylesheet"
     />
     <title>OSPI · Gestión de proyectos</title>
+    <script>
+      try {
+        var tema = localStorage.getItem("ospi-tema");
+        if (tema !== "light" && tema !== "dark") {
+          tema = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        document.documentElement.setAttribute("data-theme", tema);
+      } catch (e) {
+        document.documentElement.setAttribute("data-theme", "light");
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
