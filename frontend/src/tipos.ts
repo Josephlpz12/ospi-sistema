@@ -248,6 +248,25 @@ export type ProyectoMonitoreo = {
   nombre_responsable: string | null;
 };
 
+export type Prospecto = {
+  id_prospecto: number;
+  nombres: string;
+  apellidos: string;
+  empresa: string | null;
+  cargo: string | null;
+  correo: string | null;
+  telefono: string | null;
+  fuente: string;
+  estado: string;
+  id_responsable: number | null;
+  nombre_responsable: string | null;
+  notas: string | null;
+  id_cliente: number | null;
+  nombre_cliente: string | null;
+  creado_en: string;
+  convertido_en: string | null;
+};
+
 export type Contacto = {
   id_contacto: number;
   id_cliente: number;

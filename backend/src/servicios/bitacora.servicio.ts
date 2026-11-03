@@ -16,6 +16,7 @@ export const TABLAS_BITACORA = [
   "comentarios",
   "contactos_cliente",
   "direcciones",
+  "prospectos",
 ] as const;
 
 export type TablaBitacora = (typeof TABLAS_BITACORA)[number];
@@ -30,7 +31,8 @@ export type AccionBitacora =
   | "RESTABLECER_CLAVE"
   | "ASIGNAR"
   | "DESASIGNAR"
-  | "COMENTAR";
+  | "COMENTAR"
+  | "CONVERTIR";
 
 type Fila = Record<string, unknown>;
 type Valor = string | number | boolean | null;
@@ -111,6 +113,20 @@ const CAMPOS_POR_TABLA: Record<TablaBitacora, string[]> = {
   comentarios: ["nombre_proyecto", "titulo_tarea", "texto"],
   contactos_cliente: ["nombre_cliente", "nombres", "apellidos", "cargo", "telefono", "correo", "es_principal"],
   direcciones: ["nombre_cliente", "tipo", "departamento_gt", "municipio", "detalle"],
+  prospectos: [
+    "nombres",
+    "apellidos",
+    "empresa",
+    "cargo",
+    "correo",
+    "telefono",
+    "fuente",
+    "estado",
+    "nombre_responsable",
+    "notas",
+    "nombre_cliente",
+    "convertido_en",
+  ],
 };
 
 const ETIQUETAS: Record<string, string> = {
@@ -180,6 +196,11 @@ const ETIQUETAS: Record<string, string> = {
   departamento_gt: "Departamento",
   municipio: "Municipio",
   detalle: "Detalle",
+  empresa: "Empresa",
+  fuente: "Fuente",
+  notas: "Notas",
+  nombre_responsable: "Responsable",
+  convertido_en: "Fecha de conversión",
 };
 
 const CAMPOS_CODIGO = new Set(["estado", "tipo_cliente", "tipo"]);

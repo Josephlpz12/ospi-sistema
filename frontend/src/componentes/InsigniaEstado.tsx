@@ -1,7 +1,7 @@
-const EXITO = new Set(["ACTIVO", "Activo", "VIGENTE", "PAGADA", "PAGADO", "COMPLETADA", "Entregado"]);
+const EXITO = new Set(["ACTIVO", "Activo", "VIGENTE", "PAGADA", "PAGADO", "COMPLETADA", "Entregado", "Calificado", "Convertido"]);
 const PELIGRO = new Set(["VENCIDA", "VENCIDO", "Cancelado", "INCUMPLIDO", "SUSPENDIDO"]);
-const PENDIENTE = new Set(["PENDIENTE", "Pausado", "BLOQUEADA", "Cotización", "Nueva"]);
-const INACTIVO = new Set(["INACTIVO", "Inactivo", "Leída", "CONDONADA"]);
+const PENDIENTE = new Set(["PENDIENTE", "Pausado", "BLOQUEADA", "Cotización", "Nueva", "Nuevo"]);
+const INACTIVO = new Set(["INACTIVO", "Inactivo", "Leída", "CONDONADA", "Descartado"]);
 
 const TEXTO: Record<string, string> = {
   ACTIVO: "Activo",
@@ -25,7 +25,7 @@ function clase(estado: string) {
   if (PELIGRO.has(estado)) return "insignia insignia-peligro";
   if (PENDIENTE.has(estado)) return "insignia insignia-pendiente";
   if (INACTIVO.has(estado)) return "insignia insignia-inactivo";
-  if (estado === "EN_CURSO") return "insignia insignia-info";
+  if (estado === "EN_CURSO" || estado === "Contactado") return "insignia insignia-info";
   return "insignia";
 }
 

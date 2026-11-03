@@ -11,6 +11,7 @@ import {
   ScrollText,
   User,
   UserCog,
+  UserPlus,
   Users,
 } from "lucide-react";
 import { esAdministrador, puedeOperarFinanzas } from "../autorizacion";
@@ -84,6 +85,12 @@ export function Layout() {
             <Activity size={18} aria-hidden />
             <span>Monitoreo</span>
           </NavLink>
+          {esAdministrador(usuario?.nombre_rol) ? (
+            <NavLink to="/prospectos" title="Prospectos">
+              <UserPlus size={18} aria-hidden />
+              <span>Prospectos</span>
+            </NavLink>
+          ) : null}
           <NavLink to="/clientes" title="Clientes">
             <Users size={18} aria-hidden />
             <span>Clientes</span>

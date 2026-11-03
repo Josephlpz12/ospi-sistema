@@ -22,6 +22,10 @@ import { ContratoFicha } from "./pantallas/ContratoFicha";
 import { UsuariosLista } from "./pantallas/UsuariosLista";
 import { UsuarioFormulario } from "./pantallas/UsuarioFormulario";
 import { Bitacora } from "./pantallas/Bitacora";
+import { ProspectosLista } from "./pantallas/ProspectosLista";
+import { ProspectoFormulario } from "./pantallas/ProspectoFormulario";
+import { ProspectoFicha } from "./pantallas/ProspectoFicha";
+import { ProspectoConversion } from "./pantallas/ProspectoConversion";
 
 export default function App() {
   return (
@@ -48,6 +52,11 @@ export default function App() {
               <Route path="/proyectos/:id/editar" element={<ProyectoFormulario />} />
               <Route path="/proyectos/:id/seguimiento" element={<ProyectoSeguimiento />} />
               <Route element={<RutaPorRol permitido={esAdministrador} />}>
+                <Route path="/prospectos" element={<ProspectosLista />} />
+                <Route path="/prospectos/nuevo" element={<ProspectoFormulario />} />
+                <Route path="/prospectos/:id/editar" element={<ProspectoFormulario />} />
+                <Route path="/prospectos/:id/convertir" element={<ProspectoConversion />} />
+                <Route path="/prospectos/:id" element={<ProspectoFicha />} />
                 <Route path="/usuarios" element={<UsuariosLista />} />
                 <Route path="/usuarios/nuevo" element={<UsuarioFormulario />} />
                 <Route path="/usuarios/:id/editar" element={<UsuarioFormulario />} />

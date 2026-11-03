@@ -19,6 +19,7 @@ const TIPOS_REGISTRO: Record<string, string> = {
   comentarios: "Comentario",
   contactos_cliente: "Contacto",
   direcciones: "Dirección",
+  prospectos: "Prospecto",
 };
 
 const ACCIONES: Record<string, string> = {
@@ -32,6 +33,7 @@ const ACCIONES: Record<string, string> = {
   ASIGNAR: "Asignación",
   DESASIGNAR: "Desasignación",
   COMENTAR: "Comentario",
+  CONVERTIR: "Conversión",
 };
 
 const FILTROS_INICIALES: FiltrosBitacora = { pagina: 1, id_usuario: "", tabla: "", desde: "", hasta: "" };
