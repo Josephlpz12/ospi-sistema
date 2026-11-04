@@ -119,6 +119,35 @@ body {
 
 a {
   color: var(--azul-interactivo);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+a:focus-visible {
+  outline: 2px solid var(--azul-interactivo);
+  outline-offset: 2px;
+}
+
+table a:not(.btn) {
+  color: var(--azul-interactivo);
+  font-weight: 500;
+}
+
+table a:not(.btn):hover {
+  color: color-mix(in srgb, var(--azul-interactivo) 78%, #000);
+}
+
+[data-theme="dark"] table a:not(.btn):hover {
+  color: color-mix(in srgb, var(--azul-interactivo) 72%, #fff);
+}
+
+.sidebar a:hover,
+a.btn:hover,
+a.enlace-volver:hover {
+  text-decoration: none;
 }
 
 .enlace-volver {
@@ -170,11 +199,11 @@ section > h2:not(:first-of-type) {
 
 .sidebar {
   background:
-    radial-gradient(120% 70% at 0% 0%, var(--marca-fuerte), var(--transparente) 58%),
-    radial-gradient(90% 60% at 100% 100%, var(--violeta-fuerte), var(--transparente) 52%),
-    var(--fondo-oscuro);
-  color: var(--menu-texto);
-  border-right: 1px solid var(--line);
+    radial-gradient(120% 70% at 0% 0%, rgba(27, 48, 216, 0.72), transparent 58%),
+    radial-gradient(90% 60% at 100% 100%, rgba(91, 43, 255, 0.62), transparent 52%),
+    #080d18;
+  color: #ececf6;
+  border-right: 1px solid #2c3654;
   padding: 24px 16px;
   overflow-x: hidden;
 }
@@ -197,25 +226,25 @@ section > h2:not(:first-of-type) {
   padding: 0;
   border: 0;
   border-radius: 10px;
-  background: var(--transparente);
-  color: var(--menu-boton);
+  background: transparent;
+  color: #ffffff;
   cursor: pointer;
 }
 
 .btn-menu:hover {
-  background: var(--menu-hover);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .brand {
   margin: 0;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: var(--menu-marca);
+  color: #ffffff;
 }
 
 .brand-sub {
   margin: 4px 0 0;
-  color: var(--menu-subtitulo);
+  color: #a78bff;
   font-size: 0.85rem;
 }
 
@@ -230,7 +259,7 @@ section > h2:not(:first-of-type) {
   align-items: center;
   gap: 10px;
   position: relative;
-  color: var(--menu-texto);
+  color: #ececf6;
   text-decoration: none;
   padding: 10px 12px;
   border-radius: 12px;
@@ -252,8 +281,8 @@ section > h2:not(:first-of-type) {
 }
 
 .sidebar a:hover {
-  background: var(--menu-hover);
-  color: var(--menu-texto-hover);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
 }
 
 .sidebar a.active {
@@ -1225,6 +1254,13 @@ table + .form-inline {
   .resumen-financiero p,
   .resumen-financiero .dato-fuerte {
     color: #16171f !important;
+  }
+
+  a,
+  a:hover {
+    color: inherit !important;
+    font-weight: inherit !important;
+    text-decoration: none !important;
   }
 
   .resumen-financiero a {
