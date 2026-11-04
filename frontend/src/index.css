@@ -712,6 +712,61 @@ input:-webkit-autofill:focus {
   margin: 4px 0 20px;
 }
 
+.resumen-financiero h2 {
+  margin-top: 36px;
+  margin-bottom: 14px;
+}
+
+.resumen-estado {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.resumen-financiero .tabla-facturas {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.resumen-financiero .tabla-facturas th,
+.resumen-financiero .tabla-facturas td {
+  padding: 10px 8px;
+}
+
+.resumen-financiero .tabla-facturas th:nth-child(1),
+.resumen-financiero .tabla-facturas td:nth-child(1) {
+  width: 20%;
+  white-space: nowrap;
+}
+
+.resumen-financiero .tabla-facturas th:nth-child(2),
+.resumen-financiero .tabla-facturas td:nth-child(2),
+.resumen-financiero .tabla-facturas th:nth-child(3),
+.resumen-financiero .tabla-facturas td:nth-child(3) {
+  width: 13%;
+  white-space: nowrap;
+}
+
+.resumen-financiero .tabla-facturas th:nth-child(4),
+.resumen-financiero .tabla-facturas td:nth-child(4),
+.resumen-financiero .tabla-facturas th:nth-child(5),
+.resumen-financiero .tabla-facturas td:nth-child(5),
+.resumen-financiero .tabla-facturas th:nth-child(6),
+.resumen-financiero .tabla-facturas td:nth-child(6) {
+  width: 13%;
+  white-space: nowrap;
+}
+
+.resumen-financiero .tabla-facturas th:nth-child(7),
+.resumen-financiero .tabla-facturas td:nth-child(7) {
+  width: 15%;
+}
+
+.solo-imprimir {
+  display: none;
+}
+
 .dato-etiqueta {
   display: block;
   margin-bottom: 4px;
@@ -1077,6 +1132,201 @@ small {
 
   .app-shell {
     transition: none;
+  }
+}
+
+@media print {
+  .sidebar,
+  .topbar,
+  .no-imprimir {
+    display: none !important;
+  }
+
+  .app-shell,
+  .app-shell.menu-colapsado {
+    display: block;
+    min-height: auto;
+    grid-template-columns: 1fr;
+  }
+
+  body,
+  .main,
+  .content,
+  .resumen-financiero,
+  .resumen-financiero .card,
+  .resumen-financiero table,
+  .resumen-financiero td {
+    background: #fff !important;
+    color: #16171f !important;
+    box-shadow: none !important;
+  }
+
+  .resumen-financiero h1,
+  .resumen-financiero h2,
+  .resumen-financiero p,
+  .resumen-financiero .dato-fuerte {
+    color: #16171f !important;
+  }
+
+  .resumen-financiero th {
+    background: #f3f4fa !important;
+    color: #16171f !important;
+  }
+
+  .resumen-financiero .dato-etiqueta,
+  .resumen-financiero .dato-secundario {
+    color: #5e6478 !important;
+  }
+
+  .resumen-financiero .solo-imprimir {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    margin: 0 0 18px;
+    background: #fff !important;
+    color: #16171f !important;
+  }
+
+  .resumen-financiero .resumen-impresion .dato-fuerte {
+    font-size: 1.35rem;
+  }
+
+  .resumen-financiero h1 {
+    font-size: 1.5rem;
+  }
+
+  .resumen-financiero h2 {
+    font-size: 1.15rem;
+  }
+
+  .resumen-financiero table {
+    font-size: 0.85rem;
+  }
+
+  .resumen-financiero table th,
+  .resumen-financiero table td,
+  .resumen-financiero .tabla-facturas th,
+  .resumen-financiero .tabla-facturas td {
+    padding: 8px 6px;
+  }
+
+  .resumen-financiero .tabla-facturas th:nth-child(1),
+  .resumen-financiero .tabla-facturas td:nth-child(1) {
+    width: 18%;
+  }
+
+  .resumen-financiero .tabla-facturas th:nth-child(2),
+  .resumen-financiero .tabla-facturas td:nth-child(2),
+  .resumen-financiero .tabla-facturas th:nth-child(7),
+  .resumen-financiero .tabla-facturas td:nth-child(7) {
+    width: 13%;
+  }
+
+  .resumen-financiero .tabla-facturas th:nth-child(3),
+  .resumen-financiero .tabla-facturas td:nth-child(3),
+  .resumen-financiero .tabla-facturas th:nth-child(4),
+  .resumen-financiero .tabla-facturas td:nth-child(4),
+  .resumen-financiero .tabla-facturas th:nth-child(5),
+  .resumen-financiero .tabla-facturas td:nth-child(5),
+  .resumen-financiero .tabla-facturas th:nth-child(6),
+  .resumen-financiero .tabla-facturas td:nth-child(6) {
+    width: 14%;
+  }
+
+  .resumen-financiero .tabla-contratos,
+  .resumen-financiero .tabla-pagos,
+  .resumen-financiero .tabla-multas {
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  .resumen-financiero .tabla-contratos th:nth-child(1),
+  .resumen-financiero .tabla-contratos td:nth-child(1) {
+    width: 28%;
+    white-space: nowrap;
+  }
+
+  .resumen-financiero .tabla-contratos th:nth-child(2),
+  .resumen-financiero .tabla-contratos td:nth-child(2),
+  .resumen-financiero .tabla-contratos th:nth-child(3),
+  .resumen-financiero .tabla-contratos td:nth-child(3),
+  .resumen-financiero .tabla-contratos th:nth-child(4),
+  .resumen-financiero .tabla-contratos td:nth-child(4) {
+    width: 24%;
+  }
+
+  .resumen-financiero .tabla-pagos th:nth-child(1),
+  .resumen-financiero .tabla-pagos td:nth-child(1),
+  .resumen-financiero .tabla-pagos th:nth-child(2),
+  .resumen-financiero .tabla-pagos td:nth-child(2) {
+    width: 32%;
+  }
+
+  .resumen-financiero .tabla-pagos th:nth-child(3),
+  .resumen-financiero .tabla-pagos td:nth-child(3) {
+    width: 36%;
+    white-space: nowrap;
+  }
+
+  .resumen-financiero .tabla-multas th:nth-child(1),
+  .resumen-financiero .tabla-multas td:nth-child(1) {
+    width: 22%;
+    white-space: nowrap;
+  }
+
+  .resumen-financiero .tabla-multas th:nth-child(2),
+  .resumen-financiero .tabla-multas td:nth-child(2) {
+    width: 38%;
+  }
+
+  .resumen-financiero .tabla-multas th:nth-child(3),
+  .resumen-financiero .tabla-multas td:nth-child(3),
+  .resumen-financiero .tabla-multas th:nth-child(4),
+  .resumen-financiero .tabla-multas td:nth-child(4) {
+    width: 20%;
+  }
+
+  .resumen-financiero tr,
+  .resumen-financiero .card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .resumen-financiero .insignia {
+    padding-left: 0;
+    padding-right: 0;
+    background: #e8eef4 !important;
+    color: #16171f !important;
+  }
+
+  .resumen-financiero .insignia.insignia-exito {
+    background: #e5f6ec !important;
+    color: #146c3a !important;
+  }
+
+  .resumen-financiero .insignia.insignia-peligro,
+  .resumen-financiero .insignia.insignia-cancelado {
+    background: #fdecea !important;
+    color: #8f1d14 !important;
+  }
+
+  .resumen-financiero .insignia.insignia-pendiente,
+  .resumen-financiero .insignia.insignia-pausado {
+    background: #fff6d8 !important;
+    color: #7a5b00 !important;
+  }
+
+  .resumen-financiero .insignia.insignia-inactivo,
+  .resumen-financiero .insignia.insignia-entregado {
+    background: #eef1f4 !important;
+    color: #3d4456 !important;
+  }
+
+  .resumen-financiero .insignia.insignia-info,
+  .resumen-financiero .insignia.insignia-cotizacion {
+    background: #e8ecff !important;
+    color: #1b30d8 !important;
   }
 }
 

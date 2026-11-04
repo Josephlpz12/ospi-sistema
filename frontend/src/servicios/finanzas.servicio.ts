@@ -1,4 +1,4 @@
-import type { Contrato, Factura, Multa, Producto, Suscripcion } from "../tipos";
+import type { Contrato, Factura, Multa, Producto, ResumenFinancieroDatos, Suscripcion } from "../tipos";
 import { api } from "./api";
 
 export async function listarProductos() {
@@ -56,6 +56,10 @@ export async function aplicarMora(idFactura: number, cuerpo: Record<string, unkn
 
 export async function reactivarContrato(id: number) {
   return api<{ contrato: Contrato; mensaje?: string }>(`/contratos/${id}/reactivar`, { method: "POST" });
+}
+
+export async function obtenerResumenFinanciero(idCliente: number) {
+  return api<ResumenFinancieroDatos>(`/clientes/${idCliente}/resumen-financiero`);
 }
 
 export async function actualizarMulta(id: number, estado: string) {

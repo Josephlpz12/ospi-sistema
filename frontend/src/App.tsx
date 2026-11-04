@@ -5,7 +5,7 @@ import { ToastProveedor } from "./contexto/ToastContexto";
 import { Layout } from "./componentes/Layout";
 import { RutaPrivada } from "./componentes/RutaPrivada";
 import { RutaPorRol } from "./componentes/RutaPorRol";
-import { esAdministrador } from "./autorizacion";
+import { esAdministrador, puedeOperarFinanzas } from "./autorizacion";
 import { Login } from "./pantallas/Login";
 import { Panel } from "./pantallas/Panel";
 import { ClientesLista } from "./pantallas/ClientesLista";
@@ -26,6 +26,7 @@ import { ProspectosLista } from "./pantallas/ProspectosLista";
 import { ProspectoFormulario } from "./pantallas/ProspectoFormulario";
 import { ProspectoFicha } from "./pantallas/ProspectoFicha";
 import { ProspectoConversion } from "./pantallas/ProspectoConversion";
+import { ResumenFinanciero } from "./pantallas/ResumenFinanciero";
 
 export default function App() {
   return (
@@ -46,6 +47,9 @@ export default function App() {
               <Route path="/clientes" element={<ClientesLista />} />
               <Route path="/clientes/nuevo" element={<ClienteFormulario />} />
               <Route path="/clientes/:id/editar" element={<ClienteFormulario />} />
+              <Route element={<RutaPorRol permitido={puedeOperarFinanzas} />}>
+                <Route path="/clientes/:id/resumen-financiero" element={<ResumenFinanciero />} />
+              </Route>
               <Route path="/clientes/:id" element={<ClienteFicha />} />
               <Route path="/proyectos" element={<ProyectosLista />} />
               <Route path="/proyectos/nuevo" element={<ProyectoFormulario />} />

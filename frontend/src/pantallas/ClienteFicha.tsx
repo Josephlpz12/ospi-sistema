@@ -104,6 +104,11 @@ export function ClienteFicha() {
               Activar
             </button>
           ) : null}
+          {finanzas ? (
+            <Link className="btn btn-secundario" to={`/clientes/${cliente.id_cliente}/resumen-financiero`}>
+              Resumen financiero
+            </Link>
+          ) : null}
           {admin ? (
             <Link className="btn btn-editar" to={`/clientes/${cliente.id_cliente}/editar`}>
               Editar

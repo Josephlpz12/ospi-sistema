@@ -279,6 +279,71 @@ export type Contacto = {
   nombre_cliente: string | null;
 };
 
+export type ResumenCliente = {
+  id_cliente: number;
+  tipo_cliente: "INDIVIDUAL" | "EMPRESA";
+  estado: string;
+  nombres: string | null;
+  apellidos: string | null;
+  razon_social: string | null;
+};
+
+export type ResumenContrato = {
+  id_contrato: number;
+  numero: string;
+  fecha_inicio: string | null;
+  monto_total: string | number;
+  moneda: string;
+  estado: string;
+};
+
+export type ResumenMulta = {
+  id_multa: number;
+  motivo: string | null;
+  monto: string | number;
+  fecha: string | null;
+  estado: string;
+};
+
+export type ResumenFactura = {
+  id_factura: number;
+  numero: string;
+  fecha_emision: string | null;
+  fecha_vencimiento: string | null;
+  monto: string | number;
+  estado: string;
+  moneda: string;
+  pagado: number;
+  saldo: number;
+  dias_vencido: number | null;
+  en_mora: boolean;
+  multas: ResumenMulta[];
+};
+
+export type ResumenPago = {
+  id_pago: number;
+  fecha_pago: string | null;
+  monto: string | number;
+  numero_factura: string;
+  moneda: string;
+};
+
+export type ResumenTotales = {
+  moneda: string;
+  contratado: number;
+  facturado: number;
+  pagado: number;
+  saldo: number;
+};
+
+export type ResumenFinancieroDatos = {
+  cliente: ResumenCliente;
+  contratos: ResumenContrato[];
+  facturas: ResumenFactura[];
+  pagos: ResumenPago[];
+  totales: ResumenTotales[];
+};
+
 export type TipoDireccion = "FISCAL" | "ENTREGA" | "OTRA";
 
 export type Direccion = {
