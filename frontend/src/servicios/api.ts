@@ -1,4 +1,10 @@
-const API = "http://localhost:4000/api";
+function baseApi() {
+  const valor = import.meta.env.VITE_API_URL;
+  const base = typeof valor === "string" && valor.trim() !== "" ? valor.trim() : "http://localhost:4000";
+  return base.replace(/\/$/, "");
+}
+
+const API = `${baseApi()}/api`;
 
 const TOKEN_KEY = "ospi_token";
 const USUARIO_KEY = "ospi_usuario";
@@ -60,7 +66,7 @@ export async function api<T>(ruta: string, opciones: Opciones = {}): Promise<T> 
 
 export { API };
 
-export const ARCHIVOS = "http://localhost:4000/uploads";
+export const ARCHIVOS = `${baseApi()}/uploads`;
 
 export async function apiFormData<T>(ruta: string, body: FormData): Promise<T> {
   const token = leerToken();

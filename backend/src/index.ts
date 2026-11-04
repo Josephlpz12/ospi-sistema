@@ -19,8 +19,9 @@ import { dashboardRutas } from "./rutas/dashboard.rutas.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 4000;
+const origen = process.env.CORS_ORIGIN || "http://localhost:5173";
 
-app.use(cors({ origin: "http://localhost:5173" }));
+app.use(cors({ origin: origen }));
 app.use(express.json());
 app.use("/uploads", express.static(carpetaUploads));
 
@@ -57,5 +58,5 @@ app.use("/api/proyectos", seguimientoRutas);
 app.use("/api/proyectos", proyectosRutas);
 
 app.listen(port, () => {
-  console.log(`API OSPI escuchando en http://localhost:${port}`);
+  console.log(`API OSPI escuchando en el puerto ${port}`);
 });
