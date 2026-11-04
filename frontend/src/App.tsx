@@ -27,6 +27,7 @@ import { ProspectoFormulario } from "./pantallas/ProspectoFormulario";
 import { ProspectoFicha } from "./pantallas/ProspectoFicha";
 import { ProspectoConversion } from "./pantallas/ProspectoConversion";
 import { ResumenFinanciero } from "./pantallas/ResumenFinanciero";
+import { ResumenGeneral } from "./pantallas/ResumenGeneral";
 
 export default function App() {
   return (
@@ -48,6 +49,7 @@ export default function App() {
               <Route path="/clientes/nuevo" element={<ClienteFormulario />} />
               <Route path="/clientes/:id/editar" element={<ClienteFormulario />} />
               <Route element={<RutaPorRol permitido={puedeOperarFinanzas} />}>
+                <Route path="/resumen-general" element={<ResumenGeneral />} />
                 <Route path="/clientes/:id/resumen-financiero" element={<ResumenFinanciero />} />
               </Route>
               <Route path="/clientes/:id" element={<ClienteFicha />} />

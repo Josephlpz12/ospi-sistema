@@ -22,7 +22,7 @@ import {
   listarDirecciones,
 } from "../controladores/direcciones.controlador.js";
 import { crearSuscripcion, listarSuscripciones } from "../controladores/suscripciones.controlador.js";
-import { obtenerResumenFinanciero } from "../controladores/resumen.controlador.js";
+import { obtenerResumenFinanciero, obtenerResumenGeneral } from "../controladores/resumen.controlador.js";
 
 export const clientesRutas = Router();
 
@@ -38,6 +38,7 @@ clientesRutas.get("/:id/direcciones", autorizar(...todosLosRoles), listarDirecci
 clientesRutas.post("/:id/direcciones", autorizar(ROLES.admin), crearDireccion);
 clientesRutas.put("/:id/direcciones/:idDireccion", autorizar(ROLES.admin), actualizarDireccion);
 clientesRutas.delete("/:id/direcciones/:idDireccion", autorizar(ROLES.admin), eliminarDireccion);
+clientesRutas.get("/resumen-general", autorizar(ROLES.admin, ROLES.gerente), obtenerResumenGeneral);
 clientesRutas.get("/:id/resumen-financiero", autorizar(ROLES.admin, ROLES.gerente), obtenerResumenFinanciero);
 clientesRutas.get("/:id", autorizar(...todosLosRoles), obtenerCliente);
 clientesRutas.post("/", autorizar(ROLES.admin), crearCliente);

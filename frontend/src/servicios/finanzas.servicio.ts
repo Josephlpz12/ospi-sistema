@@ -1,4 +1,4 @@
-import type { Contrato, Factura, Multa, Producto, ResumenFinancieroDatos, Suscripcion } from "../tipos";
+import type { Contrato, Factura, Multa, Producto, ResumenFinancieroDatos, ResumenGeneralFila, Suscripcion } from "../tipos";
 import { api } from "./api";
 
 export async function listarProductos() {
@@ -60,6 +60,11 @@ export async function reactivarContrato(id: number) {
 
 export async function obtenerResumenFinanciero(idCliente: number) {
   return api<ResumenFinancieroDatos>(`/clientes/${idCliente}/resumen-financiero`);
+}
+
+export async function obtenerResumenGeneral() {
+  const datos = await api<{ filas: ResumenGeneralFila[] }>("/clientes/resumen-general");
+  return datos.filas;
 }
 
 export async function actualizarMulta(id: number, estado: string) {

@@ -1,29 +1,17 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { InsigniaEstado } from "../componentes/InsigniaEstado";
+import { dinero, fecha, fechaHoyArchivo, imprimirConTitulo, momentoActual, nombreCliente } from "../formatoFinanciero";
 import { obtenerResumenFinanciero } from "../servicios/finanzas.servicio";
-import type { ResumenCliente, ResumenFactura, ResumenFinancieroDatos } from "../tipos";
+import type { ResumenFactura, ResumenFinancieroDatos } from "../tipos";
 
-const montos = new Intl.NumberFormat("es-GT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-function dinero(valor: string | number) {
-  return `Q${montos.format(Number(valor))}`;
-}
-
-function fecha(valor: string | null) {
-  if (!valor) return "—";
-  const [anio, mes, dia] = valor.slice(0, 10).split("-");
-  if (!anio || !mes || !dia) return "—";
-  return new Date(Number(anio), Number(mes) - 1, Number(dia)).toLocaleDateString("es-GT");
-}
-
-function momentoActual() {
-  return new Date().toLocaleString("es-GT", { timeZone: "America/Guatemala" });
-}
-
-function nombreVisible(cliente: ResumenCliente) {
-  if (cliente.tipo_cliente === "EMPRESA") return cliente.razon_social ?? "Empresa";
-  return `${cliente.nombres ?? ""} ${cliente.apellidos ?? ""}`.trim() || "Cliente";
+function vieneDeResumenGeneral(estado: unknown) {
+  return (
+    typeof estado === "object" &&
+    estado !== null &&
+    "origen" in estado &&
+    (estado as { origen?: string }).origen === "resumen-general"
+  );
 }
 
 function MarcaMora({ factura }: { factura: ResumenFactura }) {
@@ -33,6 +21,8 @@ function MarcaMora({ factura }: { factura: ResumenFactura }) {
 
 export function ResumenFinanciero() {
   const { id } = useParams();
+  const ubicacion = useLocation();
+  const desdeGeneral = vieneDeResumenGeneral(ubicacion.state);
   const [datos, setDatos] = useState<ResumenFinancieroDatos | null>(null);
   const [generadoEn, setGeneradoEn] = useState("");
   const [error, setError] = useState("");
@@ -72,18 +62,26 @@ export function ResumenFinanciero() {
         <span>Generado: {generadoEn}</span>
       </p>
       <p className="no-imprimir">
-        <Link to={`/clientes/${cliente.id_cliente}`}>← Cliente</Link>
+        <Link to={desdeGeneral ? "/resumen-general" : `/clientes/${cliente.id_cliente}`}>
+          {desdeGeneral ? "← Resumen general" : "← Cliente"}
+        </Link>
       </p>
       <div className="page-head">
         <h1>Resumen financiero</h1>
-        <button type="button" className="btn no-imprimir" onClick={() => window.print()}>
+        <button
+          type="button"
+          className="btn no-imprimir"
+          onClick={() =>
+            imprimirConTitulo(`OSPI - Resumen financiero - ${nombreCliente(cliente)} ${fechaHoyArchivo()}`)
+          }
+        >
           Imprimir
         </button>
       </div>
       <div className="resumen-ficha">
         <div>
           <span className="dato-etiqueta">Cliente</span>
-          <span className="dato-fuerte">{nombreVisible(cliente)}</span>
+          <span className="dato-fuerte">{nombreCliente(cliente)}</span>
         </div>
         <div>
           <span className="dato-etiqueta">Tipo</span>

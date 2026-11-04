@@ -344,6 +344,19 @@ export type ResumenFinancieroDatos = {
   totales: ResumenTotales[];
 };
 
+export type ResumenGeneralFila = {
+  id_cliente: number;
+  tipo_cliente: "INDIVIDUAL" | "EMPRESA";
+  nombres: string | null;
+  apellidos: string | null;
+  razon_social: string | null;
+  moneda: string;
+  contratado: number;
+  pagado: number;
+  saldo: number;
+  en_mora: boolean;
+};
+
 export type TipoDireccion = "FISCAL" | "ENTREGA" | "OTRA";
 
 export type Direccion = {

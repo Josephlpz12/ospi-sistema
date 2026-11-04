@@ -135,6 +135,10 @@ h2 {
   margin-top: 0;
 }
 
+section > h2:not(:first-of-type) {
+  margin-top: 40px;
+}
+
 .app-shell {
   display: grid;
   grid-template-columns: 240px 1fr;
@@ -712,7 +716,7 @@ input:-webkit-autofill:focus {
   margin: 4px 0 20px;
 }
 
-.resumen-financiero h2 {
+section.resumen-financiero > h2 {
   margin-top: 36px;
   margin-bottom: 14px;
 }
@@ -1166,6 +1170,12 @@ small {
   .resumen-financiero p,
   .resumen-financiero .dato-fuerte {
     color: #16171f !important;
+  }
+
+  .resumen-financiero a {
+    color: #16171f !important;
+    font-weight: inherit;
+    text-decoration: none !important;
   }
 
   .resumen-financiero th {

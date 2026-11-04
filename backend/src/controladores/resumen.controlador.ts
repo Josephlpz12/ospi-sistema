@@ -26,6 +26,30 @@ function redondear(valor: number) {
   return Math.round(valor * 100) / 100;
 }
 
+const SQL_DIAS_VENCIDO = `
+  CASE
+    WHEN f.fecha_vencimiento IS NOT NULL
+     AND f.fecha_vencimiento < (CURRENT_TIMESTAMP AT TIME ZONE 'America/Guatemala')::date
+    THEN ((CURRENT_TIMESTAMP AT TIME ZONE 'America/Guatemala')::date - f.fecha_vencimiento)::int
+    ELSE NULL
+  END
+`;
+
+function datosFactura(estado: string, montoRaw: unknown, pagadoRaw: unknown, diasRaw: unknown) {
+  const monto = numero(montoRaw);
+  const pagado = numero(pagadoRaw);
+  const saldo = redondear(Math.max(0, monto - pagado));
+  const vencidaConSaldo =
+    estado !== "PAGADA" && estado !== "ANULADA" && saldo > 0 && diasRaw !== null && diasRaw !== undefined;
+  const dias = vencidaConSaldo ? Number(diasRaw) : null;
+  return {
+    pagado: redondear(pagado),
+    saldo,
+    dias_vencido: dias,
+    en_mora: dias !== null && dias > DIAS_PARA_MORA,
+  };
+}
+
 function fechaTexto(valor: unknown) {
   if (valor === null || valor === undefined || valor === "") return null;
   return String(valor).slice(0, 10);
@@ -58,7 +82,7 @@ export async function obtenerResumenFinanciero(req: Request, res: Response) {
         `SELECT id_contrato, numero, to_char(fecha_inicio, 'YYYY-MM-DD') AS fecha_inicio,
                 monto_total, moneda, estado
          FROM contratos
-         WHERE id_cliente = $1
+         WHERE id_cliente = $1 AND estado <> 'BORRADOR'
          ORDER BY fecha_inicio DESC, id_contrato DESC`,
         [id],
       ),
@@ -68,15 +92,10 @@ export async function obtenerResumenFinanciero(req: Request, res: Response) {
                 to_char(f.fecha_vencimiento, 'YYYY-MM-DD') AS fecha_vencimiento,
                 f.monto, f.estado, ct.moneda,
                 COALESCE((SELECT SUM(p.monto) FROM pagos p WHERE p.id_factura = f.id_factura), 0) AS pagado,
-                CASE
-                  WHEN f.fecha_vencimiento IS NOT NULL
-                   AND f.fecha_vencimiento < (CURRENT_TIMESTAMP AT TIME ZONE 'America/Guatemala')::date
-                  THEN ((CURRENT_TIMESTAMP AT TIME ZONE 'America/Guatemala')::date - f.fecha_vencimiento)::int
-                  ELSE NULL
-                END AS dias_vencido
+                ${SQL_DIAS_VENCIDO} AS dias_vencido
          FROM facturas f
          JOIN contratos ct ON ct.id_contrato = f.id_contrato
-         WHERE ct.id_cliente = $1
+         WHERE ct.id_cliente = $1 AND ct.estado <> 'BORRADOR'
          ORDER BY f.fecha_emision DESC, f.id_factura DESC`,
         [id],
       ),
@@ -86,7 +105,7 @@ export async function obtenerResumenFinanciero(req: Request, res: Response) {
          FROM pagos p
          JOIN facturas f ON f.id_factura = p.id_factura
          JOIN contratos ct ON ct.id_contrato = f.id_contrato
-         WHERE ct.id_cliente = $1
+         WHERE ct.id_cliente = $1 AND ct.estado <> 'BORRADOR'
          ORDER BY p.fecha_pago DESC, p.id_pago DESC`,
         [id],
       ),
@@ -95,7 +114,7 @@ export async function obtenerResumenFinanciero(req: Request, res: Response) {
          FROM multas m
          JOIN facturas f ON f.id_factura = m.id_factura
          JOIN contratos ct ON ct.id_contrato = f.id_contrato
-         WHERE ct.id_cliente = $1
+         WHERE ct.id_cliente = $1 AND ct.estado <> 'BORRADOR'
          ORDER BY m.fecha DESC, m.id_multa DESC`,
         [id],
       ),
@@ -116,12 +135,7 @@ export async function obtenerResumenFinanciero(req: Request, res: Response) {
     }
 
     const facturasLista = facturas.rows.map((fila) => {
-      const monto = numero(fila.monto);
-      const pagado = numero(fila.pagado);
-      const saldo = redondear(Math.max(0, monto - pagado));
-      const vencidaConSaldo =
-        fila.estado !== "PAGADA" && fila.estado !== "ANULADA" && saldo > 0 && fila.dias_vencido !== null;
-      const dias = vencidaConSaldo ? Number(fila.dias_vencido) : null;
+      const calculo = datosFactura(fila.estado, fila.monto, fila.pagado, fila.dias_vencido);
       return {
         id_factura: fila.id_factura,
         numero: fila.numero,
@@ -130,11 +144,11 @@ export async function obtenerResumenFinanciero(req: Request, res: Response) {
         monto: fila.monto,
         estado: fila.estado,
         moneda: fila.moneda,
-        pagado: redondear(pagado),
-        saldo,
-        dias_vencido: dias,
-        en_mora: dias !== null && dias > DIAS_PARA_MORA,
-        multas: dias !== null ? (multasPorFactura.get(Number(fila.id_factura)) ?? []) : [],
+        pagado: calculo.pagado,
+        saldo: calculo.saldo,
+        dias_vencido: calculo.dias_vencido,
+        en_mora: calculo.en_mora,
+        multas: calculo.dias_vencido !== null ? (multasPorFactura.get(Number(fila.id_factura)) ?? []) : [],
       };
     });
 
@@ -181,5 +195,72 @@ export async function obtenerResumenFinanciero(req: Request, res: Response) {
   } catch (error) {
     console.error(error);
     res.status(500).json({ ok: false, mensaje: "Error al obtener el resumen financiero" });
+  }
+}
+
+export async function obtenerResumenGeneral(_req: Request, res: Response) {
+  try {
+    const [contratos, pagos, facturas] = await Promise.all([
+      pool.query(
+        `SELECT c.id_cliente, c.tipo_cliente,
+                ci.nombres, ci.apellidos, ce.razon_social,
+                ct.moneda, SUM(ct.monto_total) AS contratado
+         FROM contratos ct
+         JOIN clientes c ON c.id_cliente = ct.id_cliente
+         LEFT JOIN clientes_individuales ci ON ci.id_cliente = c.id_cliente
+         LEFT JOIN clientes_empresas ce ON ce.id_cliente = c.id_cliente
+         WHERE ct.estado <> 'BORRADOR'
+         GROUP BY c.id_cliente, c.tipo_cliente, ci.nombres, ci.apellidos, ce.razon_social, ct.moneda`,
+      ),
+      pool.query(
+        `SELECT ct.id_cliente, ct.moneda, COALESCE(SUM(p.monto), 0) AS pagado
+         FROM pagos p
+         JOIN facturas f ON f.id_factura = p.id_factura
+         JOIN contratos ct ON ct.id_contrato = f.id_contrato
+         WHERE ct.estado <> 'BORRADOR' AND f.estado <> 'ANULADA'
+         GROUP BY ct.id_cliente, ct.moneda`,
+      ),
+      pool.query(
+        `SELECT ct.id_cliente, ct.moneda, f.estado, f.monto,
+                COALESCE((SELECT SUM(p.monto) FROM pagos p WHERE p.id_factura = f.id_factura), 0) AS pagado,
+                ${SQL_DIAS_VENCIDO} AS dias_vencido
+         FROM facturas f
+         JOIN contratos ct ON ct.id_contrato = f.id_contrato
+         WHERE ct.estado <> 'BORRADOR'`,
+      ),
+    ]);
+
+    const pagadoPorClave = new Map<string, number>();
+    for (const fila of pagos.rows) {
+      pagadoPorClave.set(`${fila.id_cliente}|${fila.moneda}`, numero(fila.pagado));
+    }
+    const moraPorClave = new Set<string>();
+    for (const fila of facturas.rows) {
+      const calculo = datosFactura(fila.estado, fila.monto, fila.pagado, fila.dias_vencido);
+      if (calculo.en_mora) moraPorClave.add(`${fila.id_cliente}|${fila.moneda}`);
+    }
+
+    const filas = contratos.rows.map((fila) => {
+      const clave = `${fila.id_cliente}|${fila.moneda}`;
+      const contratado = redondear(numero(fila.contratado));
+      const pagado = redondear(pagadoPorClave.get(clave) ?? 0);
+      return {
+        id_cliente: fila.id_cliente,
+        tipo_cliente: fila.tipo_cliente,
+        nombres: fila.nombres,
+        apellidos: fila.apellidos,
+        razon_social: fila.razon_social,
+        moneda: fila.moneda,
+        contratado,
+        pagado,
+        saldo: redondear(Math.max(0, contratado - pagado)),
+        en_mora: moraPorClave.has(clave),
+      };
+    });
+
+    res.json({ ok: true, filas });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ ok: false, mensaje: "Error al obtener el resumen general" });
   }
 }

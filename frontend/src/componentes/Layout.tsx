@@ -13,6 +13,7 @@ import {
   UserCog,
   UserPlus,
   Users,
+  Wallet,
 } from "lucide-react";
 import { esAdministrador, puedeOperarFinanzas } from "../autorizacion";
 import { BotonTema } from "./BotonTema";
@@ -103,6 +104,12 @@ export function Layout() {
             <NavLink to="/contratos" title="Contratos">
               <FileText size={18} aria-hidden />
               <span>Contratos</span>
+            </NavLink>
+          ) : null}
+          {puedeOperarFinanzas(usuario?.nombre_rol) ? (
+            <NavLink to="/resumen-general" title="Resumen general">
+              <Wallet size={18} aria-hidden />
+              <span>Resumen general</span>
             </NavLink>
           ) : null}
           <NavLink to="/alertas" title="Alertas">
