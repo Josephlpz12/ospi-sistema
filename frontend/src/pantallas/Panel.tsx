@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Ban, Bell, CalendarClock, CircleCheck, FolderKanban, Receipt, TrendingDown, Users } from "lucide-react";
-import { esAdministrador } from "../autorizacion";
-import { InsigniaEstado } from "../componentes/InsigniaEstado";
+import { Ban, Bell, CalendarClock, CircleDollarSign, FileText, FolderKanban, Receipt, TrendingDown, TrendingUp, Users, Wallet } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { puedeOperarFinanzas } from "../autorizacion";
 import { useAuth } from "../contexto/AuthContexto";
 import { useToast } from "../contexto/ToastContexto";
-import { listarClientes } from "../servicios/clientes.servicio";
-import { listarProyectos } from "../servicios/proyectos.servicio";
+import { dinero } from "../formatoFinanciero";
 import { generarAlertas, listarAlertas } from "../servicios/alertas.servicio";
-import type { Alerta, Proyecto } from "../tipos";
+import { obtenerDashboard } from "../servicios/dashboard.servicio";
+import { listarProyectos } from "../servicios/proyectos.servicio";
+import type { Alerta, Dashboard, MontoMoneda, Proyecto } from "../tipos";
 
 const iconosAlerta = {
   TAREA_VENCIDA: CalendarClock,
@@ -17,24 +18,66 @@ const iconosAlerta = {
   SERVICIO_SUSPENDIDO: Ban,
 } as const;
 
+function textoAvance(valor: number) {
+  const redondeado = Math.round(valor * 10) / 10;
+  return Number.isInteger(redondeado) ? `${redondeado}%` : `${redondeado.toFixed(1)}%`;
+}
+
+function textoMontos(filas: MontoMoneda[] | undefined) {
+  if (!filas || filas.length === 0) return dinero(0);
+  return filas.map((fila) => (fila.moneda === "GTQ" ? dinero(fila.monto) : `${dinero(fila.monto)} ${fila.moneda}`));
+}
+
+function claseValor(valor: string | string[]) {
+  const largo = (Array.isArray(valor) ? valor.join("") : valor).length;
+  if (largo > 12) return "stat-monto stat-monto-largo";
+  if (largo > 8) return "stat-monto";
+  return undefined;
+}
+
+function Tarjeta({ to, icono: Icono, etiqueta, valor }: { to: string; icono: LucideIcon; etiqueta: string; valor: string | string[] }) {
+  return (
+    <Link className="card stat" to={to}>
+      <span className="stat-icono">
+        <Icono size={18} aria-hidden />
+      </span>
+      <span>{etiqueta}</span>
+      <strong className={claseValor(valor)}>
+        {Array.isArray(valor)
+          ? valor.flatMap((linea, indice) => (indice === 0 ? [linea] : [<br key={indice} />, linea]))
+          : valor}
+      </strong>
+    </Link>
+  );
+}
+
 export function Panel() {
   const { usuario } = useAuth();
   const toast = useToast();
-  const [clientes, setClientes] = useState(0);
+  const [tablero, setTablero] = useState<Dashboard | null>(null);
   const [proyectos, setProyectos] = useState<Proyecto[]>([]);
   const [alertas, setAlertas] = useState<Alerta[]>([]);
+  const finanzas = puedeOperarFinanzas(usuario?.nombre_rol);
 
   useEffect(() => {
-    Promise.all([listarClientes(), listarProyectos(), generarAlertas().catch(() => listarAlertas(true))])
-      .then(([listaClientes, listaProyectos, listaAlertas]) => {
-        setClientes(listaClientes.length);
+    let vigente = true;
+    generarAlertas()
+      .catch(() => listarAlertas(true))
+      .then(async (lista) => {
+        const [datos, listaProyectos] = await Promise.all([obtenerDashboard(), listarProyectos()]);
+        if (!vigente) return;
+        setTablero(datos);
         setProyectos(listaProyectos);
-        setAlertas(listaAlertas.filter((a) => !a.leida).slice(0, 5));
+        setAlertas(lista.filter((a) => !a.leida).slice(0, 5));
       })
-      .catch((err: Error) => toast.error(err.message));
+      .catch((err: Error) => {
+        if (vigente) toast.error(err.message);
+      });
+    return () => {
+      vigente = false;
+    };
   }, [toast]);
 
-  const activos = proyectos.filter((p) => p.estado === "Activo").length;
   const hoy = new Date();
   const limite = new Date();
   limite.setDate(hoy.getDate() + 14);
@@ -49,73 +92,27 @@ export function Panel() {
   return (
     <section>
       <div className="page-head">
-        <h1>Panel</h1>
+        <h1>Dashboard</h1>
         <Link className="btn" to="/monitoreo">
           Tablero de monitoreo
         </Link>
       </div>
       <div className="stats">
-        <article className="card stat">
-          <span className="stat-icono stat-icono-clientes">
-            <Users size={18} aria-hidden />
-          </span>
-          <span>Clientes</span>
-          <strong>{clientes}</strong>
-        </article>
-        <article className="card stat">
-          <span className="stat-icono stat-icono-proyectos">
-            <FolderKanban size={18} aria-hidden />
-          </span>
-          <span>Proyectos</span>
-          <strong>{proyectos.length}</strong>
-        </article>
-        <article className="card stat">
-          <span className="stat-icono stat-icono-activos">
-            <CircleCheck size={18} aria-hidden />
-          </span>
-          <span>Activos</span>
-          <strong>{activos}</strong>
-        </article>
+        <Tarjeta to="/clientes" icono={Users} etiqueta="Clientes activos" valor={String(tablero?.clientes_activos ?? 0)} />
+        <Tarjeta to="/proyectos" icono={FolderKanban} etiqueta="Proyectos activos" valor={String(tablero?.proyectos_activos ?? 0)} />
+        <Tarjeta to="/monitoreo" icono={TrendingUp} etiqueta="Avance promedio" valor={textoAvance(tablero?.avance_promedio ?? 0)} />
+        {finanzas ? (
+          <Tarjeta to="/contratos" icono={FileText} etiqueta="Contratos vigentes" valor={String(tablero?.contratos_vigentes ?? 0)} />
+        ) : null}
+        <Tarjeta to="/alertas" icono={Bell} etiqueta="Alertas pendientes" valor={String(tablero?.alertas_pendientes ?? 0)} />
+        {finanzas ? (
+          <>
+            <Tarjeta to="/resumen-general" icono={Receipt} etiqueta="Facturas en mora" valor={String(tablero?.facturas_mora ?? 0)} />
+            <Tarjeta to="/resumen-general" icono={Wallet} etiqueta="Saldo pendiente" valor={textoMontos(tablero?.saldos)} />
+            <Tarjeta to="/resumen-general" icono={CircleDollarSign} etiqueta="Monto contratado" valor={textoMontos(tablero?.contratados)} />
+          </>
+        ) : null}
       </div>
-      <h2>Últimos proyectos</h2>
-      {proyectos.length === 0 ? (
-        <p>
-          Aún no hay proyectos.
-          {esAdministrador(usuario?.nombre_rol) ? (
-            <>
-              {" "}
-              <Link to="/proyectos/nuevo">Crear uno</Link>
-            </>
-          ) : null}
-        </p>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Código</th>
-              <th>Nombre</th>
-              <th>Cliente</th>
-              <th>Estado</th>
-              <th>Avance</th>
-            </tr>
-          </thead>
-          <tbody>
-            {proyectos.slice(0, 5).map((p) => (
-              <tr key={p.id_proyecto}>
-                <td>{p.codigo}</td>
-                <td>
-                  <Link to={`/proyectos/${p.id_proyecto}/seguimiento`}>{p.nombre}</Link>
-                </td>
-                <td>{p.nombre_cliente}</td>
-                <td>
-                  <InsigniaEstado estado={p.estado} />
-                </td>
-                <td className="dato-fuerte">{Number(p.porcentaje_avance)}%</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
       {alertas.length > 0 ? (
         <>
           <h2 className="seccion-panel">Alertas recientes</h2>

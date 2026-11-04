@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { EnlaceVolver } from "../componentes/EnlaceVolver";
 import { useToast } from "../contexto/ToastContexto";
 import { FUENTES_PROSPECTO, guardarProspecto, obtenerProspecto } from "../servicios/prospectos.servicio";
 import { listarEmpleados } from "../servicios/seguimiento.servicio";
@@ -92,9 +93,7 @@ export function ProspectoFormulario() {
   if (convertido) {
     return (
       <section>
-        <p>
-          <Link to={`/prospectos/${id}`}>← Prospecto</Link>
-        </p>
+        <EnlaceVolver to={`/prospectos/${id}`}>Prospecto</EnlaceVolver>
         <p className="alerta">Un prospecto convertido no se puede editar.</p>
       </section>
     );

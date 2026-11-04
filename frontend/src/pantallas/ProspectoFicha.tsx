@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { EnlaceVolver } from "../componentes/EnlaceVolver";
 import { InsigniaEstado } from "../componentes/InsigniaEstado";
 import { useConfirmar } from "../contexto/ConfirmacionContexto";
 import { useToast } from "../contexto/ToastContexto";
@@ -69,9 +70,7 @@ export function ProspectoFicha() {
 
   return (
     <section>
-      <p>
-        <Link to="/prospectos">← Prospectos</Link>
-      </p>
+      <EnlaceVolver to="/prospectos">Prospectos</EnlaceVolver>
       <div className="page-head">
         <h1>
           {prospecto.nombres} {prospecto.apellidos}

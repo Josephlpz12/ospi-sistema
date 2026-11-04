@@ -121,6 +121,24 @@ a {
   color: var(--azul-interactivo);
 }
 
+.enlace-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 10px 4px 6px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--muted);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.enlace-volver:hover {
+  background: var(--menu-hover);
+  border-color: var(--borde-tarjeta);
+  color: var(--text);
+}
+
 h1,
 h2,
 h3,
@@ -608,14 +626,24 @@ input:-webkit-autofill:focus {
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 28px;
 }
 
+a.stat {
+  color: inherit;
+  text-decoration: none;
+}
+
+a.stat strong {
+  color: var(--text);
+}
+
 .stat {
   position: relative;
-  padding-right: 72px;
+  display: flex;
+  flex-direction: column;
 }
 
 .stat-icono {
@@ -633,14 +661,27 @@ input:-webkit-autofill:focus {
 }
 
 .stat span:not(.stat-icono) {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding-right: 52px;
   color: var(--muted);
   font-size: 0.9rem;
 }
 
 .stat strong {
   display: block;
+  margin-top: 12px;
   font-size: 1.8rem;
-  margin-top: 6px;
+  line-height: 1.2;
+}
+
+.stat strong.stat-monto {
+  font-size: 1.45rem;
+}
+
+.stat strong.stat-monto-largo {
+  font-size: 1.15rem;
 }
 
 .seccion-panel {
@@ -868,14 +909,27 @@ small {
 .form-inline {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
   margin-bottom: 12px;
+  max-width: 100%;
 }
 
-.form-inline input,
-.form-inline select {
-  flex: 1;
-  min-width: 140px;
+table + .form-inline {
+  margin-top: 20px;
+}
+
+.form-inline > input,
+.form-inline > select {
+  flex: 1 1 12rem;
+  width: auto;
+  min-width: min(100%, 10rem);
+  max-width: 100%;
+}
+
+.form-inline button {
+  flex: 0 1 auto;
+  max-width: 100%;
 }
 
 .filtros-bitacora {
@@ -885,8 +939,9 @@ small {
 }
 
 .filtros-bitacora label {
-  flex: 1;
-  min-width: 160px;
+  flex: 1 1 160px;
+  min-width: min(100%, 160px);
+  max-width: 100%;
 }
 
 .detalle-bitacora {
@@ -1337,6 +1392,12 @@ small {
   .resumen-financiero .insignia.insignia-cotizacion {
     background: #e8ecff !important;
     color: #1b30d8 !important;
+  }
+}
+
+@media (max-width: 1100px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

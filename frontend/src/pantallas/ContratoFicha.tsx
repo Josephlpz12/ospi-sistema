@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { EnlaceVolver } from "../componentes/EnlaceVolver";
 import { InsigniaEstado } from "../componentes/InsigniaEstado";
 import { useConfirmar } from "../contexto/ConfirmacionContexto";
 import { useToast } from "../contexto/ToastContexto";
@@ -131,9 +132,7 @@ export function ContratoFicha() {
 
   return (
     <section>
-      <p>
-        <Link to="/contratos">← Contratos</Link>
-      </p>
+      <EnlaceVolver to="/contratos">Contratos</EnlaceVolver>
       <div className="page-head">
         <h1>{contrato.numero}</h1>
         <div className="acciones">

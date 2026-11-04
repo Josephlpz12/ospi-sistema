@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { EnlaceVolver } from "../componentes/EnlaceVolver";
 import { useConfirmar } from "../contexto/ConfirmacionContexto";
 import { useToast } from "../contexto/ToastContexto";
 import { listarClientes, listarContactos } from "../servicios/clientes.servicio";
@@ -144,9 +145,7 @@ export function ProspectoConversion() {
   if (!puedeConvertirProspecto(prospecto.estado)) {
     return (
       <section>
-        <p>
-          <Link to={`/prospectos/${prospecto.id_prospecto}`}>← Prospecto</Link>
-        </p>
+        <EnlaceVolver to={`/prospectos/${prospecto.id_prospecto}`}>Prospecto</EnlaceVolver>
         <p className="alerta">Solo se puede convertir un prospecto contactado o calificado.</p>
       </section>
     );
@@ -154,9 +153,7 @@ export function ProspectoConversion() {
 
   return (
     <section>
-      <p>
-        <Link to={`/prospectos/${prospecto.id_prospecto}`}>← Prospecto</Link>
-      </p>
+      <EnlaceVolver to={`/prospectos/${prospecto.id_prospecto}`}>Prospecto</EnlaceVolver>
       <h1>Convertir prospecto</h1>
       <p className="dato-secundario">
         {prospecto.nombres} {prospecto.apellidos}

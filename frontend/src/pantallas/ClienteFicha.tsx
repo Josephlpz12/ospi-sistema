@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { EnlaceVolver } from "../componentes/EnlaceVolver";
 import { esAdministrador, puedeOperarFinanzas } from "../autorizacion";
 import { InsigniaEstado } from "../componentes/InsigniaEstado";
 import { ListaDocumentos } from "../componentes/ListaDocumentos";
@@ -93,9 +94,7 @@ export function ClienteFicha() {
 
   return (
     <section>
-      <p>
-        <Link to="/clientes">← Clientes</Link>
-      </p>
+      <EnlaceVolver to="/clientes">Clientes</EnlaceVolver>
       <div className="page-head">
         <h1>{nombreVisible(cliente)}</h1>
         <div className="acciones">

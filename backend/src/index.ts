@@ -15,6 +15,7 @@ import { monitoreoRutas } from "./rutas/monitoreo.rutas.js";
 import { usuariosRutas } from "./rutas/usuarios.rutas.js";
 import { bitacoraRutas } from "./rutas/bitacora.rutas.js";
 import { prospectosRutas } from "./rutas/prospectos.rutas.js";
+import { dashboardRutas } from "./rutas/dashboard.rutas.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 4000;
@@ -40,6 +41,7 @@ app.get("/api/health", async (_req, res) => {
   }
 });
 
+app.use("/api/dashboard", dashboardRutas);
 app.use("/api/auth", authRutas);
 app.use("/api/clientes", clientesRutas);
 app.use("/api/prospectos", prospectosRutas);

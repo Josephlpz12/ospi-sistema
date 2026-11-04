@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { EnlaceVolver } from "../componentes/EnlaceVolver";
 import { esAdministrador, puedeActualizarSeguimiento } from "../autorizacion";
 import { useConfirmar } from "../contexto/ConfirmacionContexto";
 import { useAuth } from "../contexto/AuthContexto";
@@ -166,9 +167,7 @@ export function ProyectoSeguimiento() {
 
   return (
     <section>
-      <p>
-        <Link to="/proyectos">← Proyectos</Link>
-      </p>
+      <EnlaceVolver to="/proyectos">Proyectos</EnlaceVolver>
       <div className="page-head">
         <h1>{proyecto.nombre}</h1>
         {admin && proyecto.estado === "Cancelado" ? (

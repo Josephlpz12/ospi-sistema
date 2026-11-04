@@ -344,6 +344,22 @@ export type ResumenFinancieroDatos = {
   totales: ResumenTotales[];
 };
 
+export type MontoMoneda = {
+  moneda: string;
+  monto: number;
+};
+
+export type Dashboard = {
+  clientes_activos: number;
+  proyectos_activos: number;
+  avance_promedio: number;
+  alertas_pendientes: number;
+  contratos_vigentes?: number;
+  facturas_mora?: number;
+  saldos?: MontoMoneda[];
+  contratados?: MontoMoneda[];
+};
+
 export type ResumenGeneralFila = {
   id_cliente: number;
   tipo_cliente: "INDIVIDUAL" | "EMPRESA";

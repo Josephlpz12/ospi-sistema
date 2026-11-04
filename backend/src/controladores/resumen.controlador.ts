@@ -198,66 +198,74 @@ export async function obtenerResumenFinanciero(req: Request, res: Response) {
   }
 }
 
+export async function listarFilasResumenGeneral() {
+  const [contratos, pagos, facturas] = await Promise.all([
+    pool.query(
+      `SELECT c.id_cliente, c.tipo_cliente,
+              ci.nombres, ci.apellidos, ce.razon_social,
+              ct.moneda, SUM(ct.monto_total) AS contratado
+       FROM contratos ct
+       JOIN clientes c ON c.id_cliente = ct.id_cliente
+       LEFT JOIN clientes_individuales ci ON ci.id_cliente = c.id_cliente
+       LEFT JOIN clientes_empresas ce ON ce.id_cliente = c.id_cliente
+       WHERE ct.estado <> 'BORRADOR'
+       GROUP BY c.id_cliente, c.tipo_cliente, ci.nombres, ci.apellidos, ce.razon_social, ct.moneda`,
+    ),
+    pool.query(
+      `SELECT ct.id_cliente, ct.moneda, COALESCE(SUM(p.monto), 0) AS pagado
+       FROM pagos p
+       JOIN facturas f ON f.id_factura = p.id_factura
+       JOIN contratos ct ON ct.id_contrato = f.id_contrato
+       WHERE ct.estado <> 'BORRADOR' AND f.estado <> 'ANULADA'
+       GROUP BY ct.id_cliente, ct.moneda`,
+    ),
+    pool.query(
+      `SELECT ct.id_cliente, ct.moneda, f.estado, f.monto,
+              COALESCE((SELECT SUM(p.monto) FROM pagos p WHERE p.id_factura = f.id_factura), 0) AS pagado,
+              ${SQL_DIAS_VENCIDO} AS dias_vencido
+       FROM facturas f
+       JOIN contratos ct ON ct.id_contrato = f.id_contrato
+       WHERE ct.estado <> 'BORRADOR'`,
+    ),
+  ]);
+
+  const pagadoPorClave = new Map<string, number>();
+  for (const fila of pagos.rows) {
+    pagadoPorClave.set(`${fila.id_cliente}|${fila.moneda}`, numero(fila.pagado));
+  }
+  const moraPorClave = new Set<string>();
+  let facturasMora = 0;
+  for (const fila of facturas.rows) {
+    const calculo = datosFactura(fila.estado, fila.monto, fila.pagado, fila.dias_vencido);
+    if (!calculo.en_mora) continue;
+    facturasMora += 1;
+    moraPorClave.add(`${fila.id_cliente}|${fila.moneda}`);
+  }
+
+  const filas = contratos.rows.map((fila) => {
+    const clave = `${fila.id_cliente}|${fila.moneda}`;
+    const contratado = redondear(numero(fila.contratado));
+    const pagado = redondear(pagadoPorClave.get(clave) ?? 0);
+    return {
+      id_cliente: fila.id_cliente,
+      tipo_cliente: fila.tipo_cliente,
+      nombres: fila.nombres,
+      apellidos: fila.apellidos,
+      razon_social: fila.razon_social,
+      moneda: fila.moneda as string,
+      contratado,
+      pagado,
+      saldo: redondear(Math.max(0, contratado - pagado)),
+      en_mora: moraPorClave.has(clave),
+    };
+  });
+
+  return { filas, facturas_mora: facturasMora };
+}
+
 export async function obtenerResumenGeneral(_req: Request, res: Response) {
   try {
-    const [contratos, pagos, facturas] = await Promise.all([
-      pool.query(
-        `SELECT c.id_cliente, c.tipo_cliente,
-                ci.nombres, ci.apellidos, ce.razon_social,
-                ct.moneda, SUM(ct.monto_total) AS contratado
-         FROM contratos ct
-         JOIN clientes c ON c.id_cliente = ct.id_cliente
-         LEFT JOIN clientes_individuales ci ON ci.id_cliente = c.id_cliente
-         LEFT JOIN clientes_empresas ce ON ce.id_cliente = c.id_cliente
-         WHERE ct.estado <> 'BORRADOR'
-         GROUP BY c.id_cliente, c.tipo_cliente, ci.nombres, ci.apellidos, ce.razon_social, ct.moneda`,
-      ),
-      pool.query(
-        `SELECT ct.id_cliente, ct.moneda, COALESCE(SUM(p.monto), 0) AS pagado
-         FROM pagos p
-         JOIN facturas f ON f.id_factura = p.id_factura
-         JOIN contratos ct ON ct.id_contrato = f.id_contrato
-         WHERE ct.estado <> 'BORRADOR' AND f.estado <> 'ANULADA'
-         GROUP BY ct.id_cliente, ct.moneda`,
-      ),
-      pool.query(
-        `SELECT ct.id_cliente, ct.moneda, f.estado, f.monto,
-                COALESCE((SELECT SUM(p.monto) FROM pagos p WHERE p.id_factura = f.id_factura), 0) AS pagado,
-                ${SQL_DIAS_VENCIDO} AS dias_vencido
-         FROM facturas f
-         JOIN contratos ct ON ct.id_contrato = f.id_contrato
-         WHERE ct.estado <> 'BORRADOR'`,
-      ),
-    ]);
-
-    const pagadoPorClave = new Map<string, number>();
-    for (const fila of pagos.rows) {
-      pagadoPorClave.set(`${fila.id_cliente}|${fila.moneda}`, numero(fila.pagado));
-    }
-    const moraPorClave = new Set<string>();
-    for (const fila of facturas.rows) {
-      const calculo = datosFactura(fila.estado, fila.monto, fila.pagado, fila.dias_vencido);
-      if (calculo.en_mora) moraPorClave.add(`${fila.id_cliente}|${fila.moneda}`);
-    }
-
-    const filas = contratos.rows.map((fila) => {
-      const clave = `${fila.id_cliente}|${fila.moneda}`;
-      const contratado = redondear(numero(fila.contratado));
-      const pagado = redondear(pagadoPorClave.get(clave) ?? 0);
-      return {
-        id_cliente: fila.id_cliente,
-        tipo_cliente: fila.tipo_cliente,
-        nombres: fila.nombres,
-        apellidos: fila.apellidos,
-        razon_social: fila.razon_social,
-        moneda: fila.moneda,
-        contratado,
-        pagado,
-        saldo: redondear(Math.max(0, contratado - pagado)),
-        en_mora: moraPorClave.has(clave),
-      };
-    });
-
+    const { filas } = await listarFilasResumenGeneral();
     res.json({ ok: true, filas });
   } catch (error) {
     console.error(error);

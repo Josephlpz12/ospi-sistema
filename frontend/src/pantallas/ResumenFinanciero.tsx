@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
+import { EnlaceVolver } from "../componentes/EnlaceVolver";
 import { InsigniaEstado } from "../componentes/InsigniaEstado";
 import { dinero, fecha, fechaHoyArchivo, imprimirConTitulo, momentoActual, nombreCliente } from "../formatoFinanciero";
 import { obtenerResumenFinanciero } from "../servicios/finanzas.servicio";
@@ -61,11 +62,9 @@ export function ResumenFinanciero() {
         <span className="dato-fuerte">OSPI</span>
         <span>Generado: {generadoEn}</span>
       </p>
-      <p className="no-imprimir">
-        <Link to={desdeGeneral ? "/resumen-general" : `/clientes/${cliente.id_cliente}`}>
-          {desdeGeneral ? "← Resumen general" : "← Cliente"}
-        </Link>
-      </p>
+      <EnlaceVolver to={desdeGeneral ? "/resumen-general" : `/clientes/${cliente.id_cliente}`}>
+        {desdeGeneral ? "Resumen general" : "Cliente"}
+      </EnlaceVolver>
       <div className="page-head">
         <h1>Resumen financiero</h1>
         <button

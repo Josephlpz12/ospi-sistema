@@ -78,9 +78,9 @@ export function Layout() {
           </button>
         </div>
         <nav>
-          <NavLink to="/" end title="Panel">
+          <NavLink to="/" end title="Dashboard">
             <LayoutDashboard size={18} aria-hidden />
-            <span>Panel</span>
+            <span>Dashboard</span>
           </NavLink>
           <NavLink to="/monitoreo" title="Monitoreo">
             <Activity size={18} aria-hidden />
