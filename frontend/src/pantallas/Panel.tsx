@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Ban, Bell, CalendarClock, CircleDollarSign, FileText, FolderKanban, Receipt, TrendingDown, TrendingUp, Users, Wallet } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { puedeOperarFinanzas } from "../autorizacion";
+import { BarraAvance } from "../componentes/BarraAvance";
 import { useAuth } from "../contexto/AuthContexto";
 import { useToast } from "../contexto/ToastContexto";
 import { dinero } from "../formatoFinanciero";
@@ -170,7 +171,9 @@ export function Panel() {
                     <Link to={`/proyectos/${p.id_proyecto}/seguimiento`}>{p.nombre}</Link>
                   </td>
                   <td>{p.fecha_fin_plan ? String(p.fecha_fin_plan).slice(0, 10) : "—"}</td>
-                  <td className="dato-fuerte">{Number(p.porcentaje_avance)}%</td>
+                  <td className="dato-fuerte">
+                    <BarraAvance valor={p.porcentaje_avance} />
+                  </td>
                 </tr>
               ))}
             </tbody>

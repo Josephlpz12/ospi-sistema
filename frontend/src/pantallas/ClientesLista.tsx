@@ -73,7 +73,7 @@ export function ClientesLista() {
           </Link>
         ) : null}
       </div>
-      <table>
+      <table className="tabla-clientes">
         <thead>
           <tr>
             <th>Nombre</th>
@@ -100,12 +100,12 @@ export function ClientesLista() {
                   </Link>
                 ) : null}
                 {admin && c.estado === "INACTIVO" ? (
-                  <button type="button" className="btn btn-positivo btn-compacto" onClick={() => void activar(c.id_cliente)}>
+                  <button type="button" className="btn btn-positivo btn-compacto btn-estado" onClick={() => void activar(c.id_cliente)}>
                     Activar
                   </button>
                 ) : null}
                 {admin && c.estado !== "INACTIVO" ? (
-                  <button type="button" className="btn btn-peligro btn-compacto" onClick={() => void inactivar(c.id_cliente)}>
+                  <button type="button" className="btn btn-peligro btn-compacto btn-estado" onClick={() => void inactivar(c.id_cliente)}>
                     Inactivar
                   </button>
                 ) : null}

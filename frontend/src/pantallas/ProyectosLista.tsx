@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { esAdministrador } from "../autorizacion";
+import { BarraAvance } from "../componentes/BarraAvance";
 import { InsigniaEstado } from "../componentes/InsigniaEstado";
 import { useConfirmar } from "../contexto/ConfirmacionContexto";
 import { useAuth } from "../contexto/AuthContexto";
@@ -70,7 +71,7 @@ export function ProyectosLista() {
           </Link>
         ) : null}
       </div>
-      <table>
+      <table className="tabla-proyectos">
         <thead>
           <tr>
             <th>Código</th>
@@ -84,13 +85,15 @@ export function ProyectosLista() {
         <tbody>
           {proyectos.map((p) => (
             <tr key={p.id_proyecto}>
-              <td>{p.codigo}</td>
+              <td className="codigo">{p.codigo}</td>
               <td>{p.nombre}</td>
               <td>{p.nombre_cliente}</td>
               <td>
                 <InsigniaEstado estado={p.estado} />
               </td>
-              <td className="dato-fuerte">{Number(p.porcentaje_avance)}%</td>
+              <td className="dato-fuerte">
+                <BarraAvance valor={p.porcentaje_avance} />
+              </td>
               <td className="acciones">
                 <Link className="btn btn-secundario btn-compacto" to={`/proyectos/${p.id_proyecto}/seguimiento`}>
                   Seguimiento

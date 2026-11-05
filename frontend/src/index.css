@@ -49,6 +49,10 @@
   --exito: #146c3a;
   --exito-hover: #115c32;
   --exito-toast: #1b7a3a;
+  --avance-pista: #e3e6f2;
+  --avance-ambar: #b8860b;
+  --avance-azul: var(--azul-marca);
+  --avance-verde: var(--exito);
 
   --bg: var(--fondo-claro);
   --panel: var(--tarjeta);
@@ -107,6 +111,10 @@
   --sombra-elevada: 0 24px 60px rgba(0, 0, 0, 0.45);
   --sombra-boton: 0 8px 18px rgba(27, 48, 216, 0.45);
   --velo: rgba(0, 0, 0, 0.62);
+  --avance-pista: #2c3654;
+  --avance-ambar: #f3d48a;
+  --avance-azul: #9aa6ff;
+  --avance-verde: #8ee0b0;
 }
 
 * {
@@ -298,6 +306,7 @@ section > h2:not(:first-of-type) {
 .main {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   background: var(--bg);
 }
 
@@ -358,7 +367,9 @@ section > h2:not(:first-of-type) {
 }
 
 .content {
+  min-width: 0;
   padding: 28px;
+  container-type: inline-size;
 }
 
 .card {
@@ -860,6 +871,38 @@ section.resumen-financiero > h2 {
   font-weight: 700;
 }
 
+.barra-avance {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.barra-avance-pista {
+  width: 72px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--avance-pista);
+  overflow: hidden;
+}
+
+.barra-avance-relleno {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.barra-avance-bajo {
+  background: var(--avance-ambar);
+}
+
+.barra-avance-medio {
+  background: var(--avance-azul);
+}
+
+.barra-avance-completo {
+  background: var(--avance-verde);
+}
+
 .dato-secundario {
   color: var(--muted);
   font-size: 0.92rem;
@@ -904,6 +947,128 @@ tbody tr:last-child td {
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
+}
+
+td.acciones {
+  display: table-cell;
+  width: 1%;
+  padding-right: 28px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+table:has(td.acciones) th:last-child {
+  padding-right: 28px;
+}
+
+td.acciones > * + * {
+  margin-left: 8px;
+}
+
+td.acciones .btn {
+  white-space: nowrap;
+}
+
+.tabla-usuarios td.acciones {
+  padding-right: 48px;
+}
+
+.tabla-usuarios td.acciones > * + * {
+  margin-left: 24px;
+}
+
+table.tabla-usuarios:has(td.acciones) th:last-child {
+  padding-right: 48px;
+}
+
+.tabla-clientes td.acciones,
+.tabla-clientes th:last-child {
+  width: 22rem;
+  text-align: left;
+}
+
+.tabla-clientes td.acciones > * + * {
+  margin-left: 24px;
+}
+
+.tabla-contratos td.acciones,
+.tabla-contratos th:last-child {
+  width: 12rem;
+  text-align: left;
+}
+
+.tabla-contratos td.acciones .btn {
+  margin-left: 20px;
+}
+
+.tabla-usuarios td.acciones,
+.tabla-usuarios th:last-child {
+  width: 20rem;
+  text-align: left;
+}
+
+.tabla-proyectos {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.tabla-proyectos th:nth-child(1),
+.tabla-proyectos td.codigo {
+  width: 7.75rem;
+  white-space: nowrap;
+}
+
+.tabla-proyectos th:nth-child(2),
+.tabla-proyectos td:nth-child(2),
+.tabla-proyectos th:nth-child(3),
+.tabla-proyectos td:nth-child(3) {
+  overflow-wrap: break-word;
+}
+
+.tabla-proyectos th:nth-child(4),
+.tabla-proyectos td:nth-child(4) {
+  width: 7.5rem;
+  white-space: nowrap;
+}
+
+.tabla-proyectos th:nth-child(5),
+.tabla-proyectos td:nth-child(5) {
+  width: 10.25rem;
+  white-space: nowrap;
+}
+
+.tabla-proyectos th:last-child,
+.tabla-proyectos td.acciones {
+  width: 19.375rem;
+}
+
+@container (max-width: 760px) {
+  .tabla-proyectos th:nth-child(1),
+  .tabla-proyectos td.codigo {
+    width: 21%;
+  }
+
+  .tabla-proyectos th:nth-child(2),
+  .tabla-proyectos td:nth-child(2),
+  .tabla-proyectos th:nth-child(3),
+  .tabla-proyectos td:nth-child(3) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tabla-proyectos th:nth-child(4),
+  .tabla-proyectos td:nth-child(4),
+  .tabla-proyectos th:nth-child(5),
+  .tabla-proyectos td:nth-child(5) {
+    width: 7%;
+    white-space: normal;
+  }
+
+  .tabla-proyectos th:last-child,
+  .tabla-proyectos td.acciones {
+    width: 50%;
+  }
 }
 
 .form-actions {
@@ -1078,6 +1243,10 @@ table + .form-inline {
   padding: 4px 10px;
   border-radius: 8px;
   font-size: 0.85rem;
+}
+
+td.acciones .btn-estado {
+  min-width: 6rem;
 }
 
 .btn-editar {

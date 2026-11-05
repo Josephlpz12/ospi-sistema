@@ -51,7 +51,7 @@ export function ContratosLista() {
           Filtrado por cliente #{idCliente}. <Link to="/contratos">Ver todos</Link>
         </p>
       ) : null}
-      <table>
+      <table className="tabla-contratos">
         <thead>
           <tr>
             <th>Número</th>

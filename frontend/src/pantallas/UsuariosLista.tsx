@@ -50,7 +50,7 @@ export function UsuariosLista() {
           Nuevo usuario
         </Link>
       </div>
-      <table>
+      <table className="tabla-usuarios">
         <thead>
           <tr>
             <th>Usuario</th>
@@ -76,7 +76,7 @@ export function UsuariosLista() {
                 {u.id_usuario !== usuario?.id_usuario ? (
                   <button
                     type="button"
-                    className={u.activo ? "btn btn-peligro btn-compacto" : "btn btn-positivo btn-compacto"}
+                    className={u.activo ? "btn btn-peligro btn-compacto btn-estado" : "btn btn-positivo btn-compacto btn-estado"}
                     onClick={() => void cambiarEstado(u)}
                   >
                     {u.activo ? "Inactivar" : "Activar"}

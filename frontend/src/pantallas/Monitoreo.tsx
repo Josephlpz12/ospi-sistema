@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { BarraAvance } from "../componentes/BarraAvance";
 import { useToast } from "../contexto/ToastContexto";
 import { listarProyectosActivos } from "../servicios/monitoreo.servicio";
 import type { ProyectoMonitoreo } from "../tipos";
@@ -49,7 +50,9 @@ export function Monitoreo() {
               </td>
               <td>{p.nombre_responsable?.trim() ? p.nombre_responsable : "Sin asignar"}</td>
               <td>{fecha(p.fecha_fin_plan)}</td>
-              <td>{Number(p.porcentaje_avance)}%</td>
+              <td>
+                <BarraAvance valor={p.porcentaje_avance} />
+              </td>
             </tr>
           ))}
         </tbody>

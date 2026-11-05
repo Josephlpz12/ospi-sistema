@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { EnlaceVolver } from "../componentes/EnlaceVolver";
 import { esAdministrador, puedeOperarFinanzas } from "../autorizacion";
+import { BarraAvance } from "../componentes/BarraAvance";
 import { InsigniaEstado } from "../componentes/InsigniaEstado";
 import { ListaDocumentos } from "../componentes/ListaDocumentos";
 import { SeccionContactos } from "../componentes/SeccionContactos";
@@ -208,7 +209,9 @@ export function ClienteFicha() {
                 <td>
                   <InsigniaEstado estado={p.estado} />
                 </td>
-                <td className="dato-fuerte">{Number(p.porcentaje_avance)}%</td>
+                <td className="dato-fuerte">
+                  <BarraAvance valor={p.porcentaje_avance} />
+                </td>
                 <td className="acciones">
                   <Link className="btn btn-secundario btn-compacto" to={`/proyectos/${p.id_proyecto}/seguimiento`}>
                     Seguimiento
