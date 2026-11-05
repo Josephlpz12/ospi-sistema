@@ -1,6 +1,6 @@
 # OSPI — Gestión de proyectos
 
-Sistema web para la empresa OSPI (venta de software, departamento de Guatemala). Cubre clientes, prospectos, proyectos y su seguimiento, contratos, facturas, pagos, suscripciones, alertas, documentos, usuarios y la bitácora de cambios.
+Sistema web para la empresa OSPI (venta de software, departamento de Guatemala). Cubre clientes, prospectos, proyectos y su seguimiento, contratos, facturas, pagos, suscripciones, alertas, documentos y la bitácora de cambios.
 
 La interfaz está en `frontend` (React, TypeScript y Vite). La API está en `backend` (Node, Express y PostgreSQL). El acceso usa JWT y tres roles: Administrador, Desarrollador y Gerente financiero.
 
@@ -20,7 +20,6 @@ La interfaz está en `frontend` (React, TypeScript y Vite). La API está en `bac
 backend/sql/001_schema.sql
 backend/sql/002_seed.sql
 backend/sql/004_seed_finanzas.sql
-backend/sql/005_prospectos.sql
 ```
 
 4. En `backend`, copia `.env.example` a `.env` y completa los valores reales. No subas `.env` al repositorio.
@@ -34,27 +33,17 @@ cd ../frontend
 npm install
 ```
 
-7. Crea el administrador inicial:
-
-```bash
-cd backend
-npm run crear-admin
-```
-
-El comando imprime la contraseña en la consola. Cámbiala antes de usar el sistema con datos reales.
-
 ## Scripts de la base
 
 Obligatorios, en este orden:
 
 | Script | Contenido |
 | --- | --- |
-| `001_schema.sql` | Las 28 tablas, sus restricciones e índices. |
+| `001_schema.sql` | Las 28 tablas, incluida la de prospectos, sus restricciones e índices. |
 | `002_seed.sql` | Catálogos: roles, departamentos, estados de proyecto y categorías de producto. |
 | `004_seed_finanzas.sql` | Tres productos de software, uno por cada categoría. |
-| `005_prospectos.sql` | Tabla `prospectos`, sus reglas y sus índices. |
 
-`002_seed.sql` deja tres roles (Administrador, Gerente financiero y Desarrollador), renombra un rol antiguo llamado Gerente si todavía existe, y borra el rol Comercial solo si ningún usuario lo usa. También inserta los departamentos Ventas, Desarrollo y Soporte; los estados Cotización, Activo, Pausado, Entregado y Cancelado; y las categorías Software a la medida, Licenciamiento, y Soporte y mantenimiento.
+`002_seed.sql` deja tres roles (Administrador, Gerente financiero y Desarrollador), renombra un rol antiguo llamado Gerente si todavía existe, y borra el rol Comercial solo si no está en uso. También inserta los departamentos Ventas, Desarrollo y Soporte; los estados Cotización, Activo, Pausado, Entregado y Cancelado; y las categorías Software a la medida, Licenciamiento, y Soporte y mantenimiento.
 
 `004_seed_finanzas.sql` inserta Licencia OSPI anual, Soporte y mantenimiento, e Implementación a la medida. No inserta contratos, facturas ni pagos.
 
@@ -62,7 +51,7 @@ Opcional, y solo para pruebas:
 
 | Script | Contenido |
 | --- | --- |
-| `003_seed_seguimiento.sql` | Un empleado ligado al administrador y, si ya hay un proyecto, fases y tareas de ejemplo. En una base vacía no crea proyectos. |
+| `003_seed_seguimiento.sql` | Un empleado de ejemplo y, si ya hay un proyecto, fases y tareas de ejemplo. En una base vacía no crea proyectos. |
 
 ## Variables de entorno
 
@@ -126,25 +115,3 @@ npm run preview
 `npm run build` deja los archivos estáticos en `frontend/dist`. En un servidor pueden publicarse con cualquier servidor de archivos estáticos. `npm run preview` solo sirve esa carpeta para comprobarla. La API escucha el puerto de `PORT`.
 
 Define `VITE_API_URL` y `CORS_ORIGIN` con las direcciones públicas antes de compilar el frontend y de arrancar la API.
-
-## Roles
-
-- **Administrador:** clientes, prospectos, proyectos, seguimiento, usuarios, bitácora y finanzas.
-- **Desarrollador:** proyectos, seguimiento, alertas y monitoreo. No opera contratos ni ve los montos del dashboard.
-- **Gerente financiero:** contratos, facturas, pagos, suscripciones y los indicadores financieros. No administra usuarios ni prospectos.
-
-## Usuarios de demostración
-
-Solo para pruebas. No los uses en un servidor con datos reales; cámbialos o no los crees.
-
-```bash
-cd backend
-npm run crear-usuarios-prueba
-```
-
-| Usuario | Contraseña | Rol |
-| --- | --- | --- |
-| `desarrollador` | `OspiDev2026` | Desarrollador |
-| `gerente` | `OspiFinanzas2026` | Gerente financiero |
-
-Si el administrador todavía no existe, ese mismo comando también lo crea y muestra su contraseña en la consola. Cámbiala antes de usar el sistema.
