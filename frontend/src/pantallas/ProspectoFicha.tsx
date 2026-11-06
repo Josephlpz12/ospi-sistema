@@ -142,7 +142,7 @@ export function ProspectoFicha() {
       </div>
       {abierto ? (
         <form
-          className="card form-inline"
+          className="card form-inline cambiar-estado-prospecto"
           style={{ marginTop: 16 }}
           onSubmit={(e) => {
             e.preventDefault();

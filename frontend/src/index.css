@@ -1142,6 +1142,16 @@ small {
   max-width: 100%;
 }
 
+.cambiar-estado-prospecto.form-inline {
+  align-items: flex-end;
+}
+
+.cambiar-estado-prospecto .btn {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border: 1px solid var(--line);
+}
+
 table + .form-inline {
   margin-top: 20px;
 }
