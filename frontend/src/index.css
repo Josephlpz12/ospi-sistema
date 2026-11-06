@@ -609,6 +609,10 @@ section > h2:not(:first-of-type) {
   gap: 12px;
 }
 
+.tarjeta-tareas .form {
+  margin-bottom: 16px;
+}
+
 label {
   display: flex;
   flex-direction: column;

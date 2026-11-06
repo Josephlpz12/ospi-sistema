@@ -261,7 +261,7 @@ export function ProyectoSeguimiento() {
           </table>
         </article>
 
-        <article className="card">
+        <article className="card tarjeta-tareas">
           <h2>Tareas</h2>
           {admin ? (
           <form className="form" onSubmit={(e) => void altaTarea(e)}>
