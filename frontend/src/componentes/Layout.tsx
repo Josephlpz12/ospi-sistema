@@ -64,18 +64,21 @@ export function Layout() {
       <aside className="sidebar">
         <div className="sidebar-tope">
           <div className="marca-menu">
-            <p className="brand">OSPI</p>
+            <img className="logo-menu" src="/ospi-logo-blanco.png" alt="OSPI" />
             <p className="brand-sub">Gestión de proyectos</p>
           </div>
-          <button
-            type="button"
-            className="btn-menu"
-            onClick={alternarMenu}
-            aria-expanded={!menuColapsado}
-            aria-label={menuColapsado ? "Expandir menú" : "Contraer menú"}
-          >
-            <Menu size={18} aria-hidden />
-          </button>
+          <div className="logo-menu-colapsado">
+            <img className="logo-menu-icono" src="/ospi-icono.png" alt="OSPI" />
+            <button
+              type="button"
+              className="btn-menu"
+              onClick={alternarMenu}
+              aria-expanded={!menuColapsado}
+              aria-label={menuColapsado ? "Expandir menú" : "Contraer menú"}
+            >
+              <Menu size={18} aria-hidden />
+            </button>
+          </div>
         </div>
         <nav>
           <NavLink to="/" end title="Dashboard">

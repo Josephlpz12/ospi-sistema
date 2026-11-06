@@ -243,6 +243,35 @@ section > h2:not(:first-of-type) {
   background: rgba(255, 255, 255, 0.08);
 }
 
+.logo-menu {
+  display: block;
+  height: 32px;
+  width: auto;
+}
+
+.logo-menu-icono {
+  display: none;
+  height: 32px;
+  width: 32px;
+  object-fit: contain;
+}
+
+.logo-menu-colapsado {
+  display: contents;
+}
+
+.menu-colapsado .logo-menu-colapsado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.menu-colapsado .logo-menu-icono {
+  display: block;
+}
+
 .brand {
   margin: 0;
   font-weight: 700;
