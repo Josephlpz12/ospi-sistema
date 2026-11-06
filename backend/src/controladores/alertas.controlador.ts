@@ -1,15 +1,20 @@
 import type { Request, Response } from "express";
+import type { PoolClient } from "pg";
 import { pool } from "../db.js";
 
-export async function asegurarAlerta(idProyecto: number, tipo: string, mensaje: string) {
-  const existe = await pool.query(
+const BLOQUEO_ALERTAS = 714001;
+
+type Consulta = Pick<PoolClient, "query">;
+
+export async function asegurarAlerta(idProyecto: number, tipo: string, mensaje: string, db: Consulta = pool) {
+  const existe = await db.query(
     `SELECT id_alerta FROM alertas
      WHERE id_proyecto = $1 AND tipo = $2 AND mensaje = $3 AND leida = FALSE
      LIMIT 1`,
     [idProyecto, tipo, mensaje],
   );
   if (existe.rows[0]) return;
-  await pool.query(
+  await db.query(
     `INSERT INTO alertas (id_proyecto, tipo, mensaje) VALUES ($1, $2, $3)`,
     [idProyecto, tipo, mensaje],
   );
@@ -34,8 +39,11 @@ export async function listarAlertas(req: Request, res: Response) {
 }
 
 export async function generarAlertas(_req: Request, res: Response) {
+  const cliente = await pool.connect();
   try {
-    const vencidas = await pool.query(
+    await cliente.query("BEGIN");
+    await cliente.query("SELECT pg_advisory_xact_lock($1)", [BLOQUEO_ALERTAS]);
+    const vencidas = await cliente.query(
       `SELECT t.id_proyecto, t.titulo
        FROM tareas t
        JOIN proyectos p ON p.id_proyecto = t.id_proyecto
@@ -45,10 +53,10 @@ export async function generarAlertas(_req: Request, res: Response) {
          AND e.nombre NOT IN ('Cancelado', 'Entregado')`,
     );
     for (const fila of vencidas.rows) {
-      await asegurarAlerta(fila.id_proyecto, "TAREA_VENCIDA", `Tarea vencida: ${fila.titulo}`);
+      await asegurarAlerta(fila.id_proyecto, "TAREA_VENCIDA", `Tarea vencida: ${fila.titulo}`, cliente);
     }
 
-    const bajos = await pool.query(
+    const bajos = await cliente.query(
       `SELECT p.id_proyecto, p.nombre, p.porcentaje_avance
        FROM proyectos p
        JOIN estados_proyecto e ON e.id_estado = p.id_estado
@@ -60,10 +68,11 @@ export async function generarAlertas(_req: Request, res: Response) {
         fila.id_proyecto,
         "AVANCE_BAJO",
         `Avance bajo (${Number(fila.porcentaje_avance)}%) en ${fila.nombre}`,
+        cliente,
       );
     }
 
-    const listado = await pool.query(
+    const listado = await cliente.query(
       `SELECT a.id_alerta, a.id_proyecto, a.tipo, a.mensaje, a.leida, a.creada_en,
               p.nombre AS nombre_proyecto, p.codigo
        FROM alertas a
@@ -71,10 +80,18 @@ export async function generarAlertas(_req: Request, res: Response) {
        WHERE a.leida = FALSE
        ORDER BY a.creada_en DESC`,
     );
+    await cliente.query("COMMIT");
     res.json({ ok: true, creadas: (vencidas.rowCount ?? 0) + (bajos.rowCount ?? 0), alertas: listado.rows });
   } catch (error) {
+    try {
+      await cliente.query("ROLLBACK");
+    } catch (reverso) {
+      console.error(reverso);
+    }
     console.error(error);
     res.status(500).json({ ok: false, mensaje: "Error al generar alertas" });
+  } finally {
+    cliente.release();
   }
 }
 
