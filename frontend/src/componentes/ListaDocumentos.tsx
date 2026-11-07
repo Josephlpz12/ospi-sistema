@@ -3,7 +3,7 @@ import { esAdministrador } from "../autorizacion";
 import { useConfirmar } from "../contexto/ConfirmacionContexto";
 import { useAuth } from "../contexto/AuthContexto";
 import { useToast } from "../contexto/ToastContexto";
-import { eliminarDocumento, listarDocumentos, subirDocumento, urlDocumento } from "../servicios/documentos.servicio";
+import { abrirDocumento, eliminarDocumento, listarDocumentos, subirDocumento } from "../servicios/documentos.servicio";
 import type { Documento } from "../tipos";
 
 type Props = {
@@ -38,6 +38,14 @@ export function ListaDocumentos({ id_cliente, id_proyecto }: Props) {
       await cargar();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo subir");
+    }
+  }
+
+  async function abrir(documento: Documento) {
+    try {
+      await abrirDocumento(documento.id_documento, documento.nombre);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo abrir el documento");
     }
   }
 
@@ -80,9 +88,9 @@ export function ListaDocumentos({ id_cliente, id_proyecto }: Props) {
           {docs.map((d) => (
             <tr key={d.id_documento}>
               <td>
-                <a href={urlDocumento(d.ruta_archivo)} target="_blank" rel="noreferrer">
+                <button type="button" className="btn-text" onClick={() => void abrir(d)}>
                   {d.nombre}
-                </a>
+                </button>
               </td>
               <td>{new Date(d.subido_en).toLocaleString("es-GT")}</td>
               {admin ? (

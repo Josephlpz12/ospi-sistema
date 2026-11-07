@@ -8,7 +8,6 @@ import { seguimientoRutas } from "./rutas/seguimiento.rutas.js";
 import { empleadosRutas } from "./rutas/empleados.rutas.js";
 import { alertasRutas } from "./rutas/alertas.rutas.js";
 import { documentosRutas } from "./rutas/documentos.rutas.js";
-import { carpetaUploads } from "./controladores/documentos.controlador.js";
 import { productosRutas } from "./rutas/productos.rutas.js";
 import { finanzasRutas } from "./rutas/finanzas.rutas.js";
 import { monitoreoRutas } from "./rutas/monitoreo.rutas.js";
@@ -23,7 +22,6 @@ const origen = process.env.CORS_ORIGIN || "http://localhost:5173";
 
 app.use(cors({ origin: origen }));
 app.use(express.json());
-app.use("/uploads", express.static(carpetaUploads));
 
 app.get("/api/health", async (_req, res) => {
   try {

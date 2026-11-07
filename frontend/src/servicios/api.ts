@@ -66,8 +66,6 @@ export async function api<T>(ruta: string, opciones: Opciones = {}): Promise<T> 
 
 export { API };
 
-export const ARCHIVOS = `${baseApi()}/uploads`;
-
 export async function apiFormData<T>(ruta: string, body: FormData): Promise<T> {
   const token = leerToken();
   const headers = new Headers();
