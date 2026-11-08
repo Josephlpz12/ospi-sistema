@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { pool } from "../db.js";
-import { cambiarEstadoRegistrado, registrarCambioAparte } from "../servicios/bitacora.servicio.js";
+import { cambiarEstadoRegistrado, registrarCambio, registrarCambioAparte } from "../servicios/bitacora.servicio.js";
 
 const SQL_CONTRATO = `
   SELECT c.id_contrato, c.id_cliente, c.id_proyecto, c.id_suscripcion, c.numero,
@@ -154,6 +154,23 @@ export async function reactivarContrato(req: Request, res: Response) {
           id: contrato.rows[0].id_suscripcion,
           estado: "ACTIVA",
         });
+      } else {
+        const reactivadas = await cx.query(
+          `UPDATE suscripciones SET estado = 'ACTIVA'
+           WHERE id_cliente = $1 AND estado = 'SUSPENDIDA'
+           RETURNING id_suscripcion`,
+          [contrato.rows[0].id_cliente],
+        );
+        for (const reactivada of reactivadas.rows) {
+          await registrarCambio(cx, {
+            idUsuario,
+            tabla: "suscripciones",
+            idRegistro: reactivada.id_suscripcion,
+            accion: "CAMBIAR_ESTADO",
+            antes: { estado: "SUSPENDIDA" },
+            despues: { estado: "ACTIVA" },
+          });
+        }
       }
       await cambiarEstadoRegistrado(cx, {
         idUsuario,
