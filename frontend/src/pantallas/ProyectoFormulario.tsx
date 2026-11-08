@@ -140,9 +140,14 @@ export function ProyectoFormulario() {
         </label>
         {editando ? (
           <label>
-            Estado (id)
-            <input value={form.id_estado} onChange={(e) => setCampo("id_estado", e.target.value)} />
-            <small>1 Cotización, 2 Activo, 3 Pausado, 4 Entregado, 5 Cancelado</small>
+            Estado
+            <select value={form.id_estado} onChange={(e) => setCampo("id_estado", e.target.value)}>
+              <option value="1">Cotización</option>
+              <option value="2">Activo</option>
+              <option value="3">Pausado</option>
+              <option value="4">Entregado</option>
+              <option value="5">Cancelado</option>
+            </select>
           </label>
         ) : null}
         <div className="form-actions">
